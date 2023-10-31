@@ -40,28 +40,8 @@ public class WebhookResource {
     @PostMapping("/webhooks/notifications")
     public ResponseEntity<String> webhooks(@RequestBody NotificationRequest notificationRequest){
 
-        notificationRequest.getNotificationItems().forEach(
-          item -> {
-              // We recommend validate HMAC signature in the webhooks for security reasons
-              try {
-                  if (new HMACValidator().validateHMAC(item, this.applicationProperty.getHmacKey())) {
-                      log.info("Received webhook with event {} : \n" +
-                          "Merchant Reference: {}\n" +
-                          "Alias : {}\n" +
-                          "PSP reference : {}"
-                          , item.getEventCode(), item.getMerchantReference(), item.getAdditionalData().get("alias"), item.getPspReference());
-                  } else {
-                      // invalid HMAC signature: do not send [accepted] response
-                      log.warn("Could not validate HMAC signature for incoming webhook message: {}", item);
-                      throw new RuntimeException("Invalid HMAC signature");
-                  }
-              } catch (SignatureException e) {
-                  log.error("Error while validating HMAC Key", e);
-              }
-          }
-        );
-
-        // Notifying the server we're accepting the payload
+        // TODO : Validate the notificationRequest here
+        
         return ResponseEntity.ok().body("[accepted]");
     }
 }

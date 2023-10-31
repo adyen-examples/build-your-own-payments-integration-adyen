@@ -38,8 +38,8 @@ public class CheckoutResource {
         this.applicationProperty = applicationProperty;
 
         if(applicationProperty.getApiKey() == null) {
-            log.warn("ADYEN_KEY is UNDEFINED");
-            throw new RuntimeException("ADYEN_KEY is UNDEFINED");
+            log.warn("ADYEN_API_KEY is UNDEFINED");
+            throw new RuntimeException("ADYEN_API_KEY is UNDEFINED");
         }
 
         var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
@@ -48,27 +48,9 @@ public class CheckoutResource {
 
     @PostMapping("/sessions")
     public ResponseEntity<CreateCheckoutSessionResponse> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
-        var orderRef = UUID.randomUUID().toString();
-        var amount = new Amount()
-            .currency("EUR")
-            .value(10000L); // value is 100€ in minor units
-
-        var checkoutSession = new CreateCheckoutSessionRequest();
-        checkoutSession.countryCode("NL");
-        checkoutSession.merchantAccount(this.applicationProperty.getMerchantAccount());
-        // (optional) set WEB to filter out payment methods available only for this platform
-        checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
-        checkoutSession.setReference(orderRef); // required
-        checkoutSession.setReturnUrl(request.getScheme() + "://" + host + "/redirect?orderRef=" + orderRef);
-        checkoutSession.setAmount(amount);
-        // set lineItems required for some payment methods (ie Klarna)
-        checkoutSession.setLineItems(Arrays.asList(
-            new LineItem().quantity(1L).amountIncludingTax(5000L).description("Sunglasses"),
-            new LineItem().quantity(1L).amountIncludingTax(5000L).description("Headphones"))
-        );
-
-        log.info("REST request to create Adyen Payment Session {}", checkoutSession);
-        var response = checkout.sessions(checkoutSession);
+        
+        // TODO : Create a valid sessions request here based on the input of that function
+        var response = "";
         return ResponseEntity.ok().body(response);
     }
 }

@@ -11,10 +11,9 @@ async function startCheckout() {
   const type = document.getElementById("type").innerHTML;
 
   try {
-    const checkoutSessionResponse = await callServer("/api/sessions?type=" + type);
+    //TODO : call the server "/api/sessions?type=" + type", and feed the response of the server to the createAdyenCheckout function. You can use the callServer function help for that.
     const checkout = await createAdyenCheckout(checkoutSessionResponse);
     checkout.create(type).mount(document.getElementById("payment"));
-
   } catch (error) {
     console.error(error);
     alert("Error occurred. Look at console for details");
@@ -35,33 +34,7 @@ async function finalizeCheckout() {
 async function createAdyenCheckout(session){
   return new AdyenCheckout(
     {
-      clientKey,
-      locale: "en_US",
-      environment: "test",
-      session: session,
-      showPayButton: true,
-      paymentMethodsConfiguration: {
-        ideal: {
-          showImage: true,
-        },
-        card: {
-          hasHolderName: true,
-          holderNameRequired: true,
-          name: "Credit or debit card",
-          amount: {
-            value: 10000,  // in minor units
-            currency: "EUR",
-          },
-        },
-        paypal: {
-          amount: {
-            value: 10000, // in minor units
-            currency: "USD",
-          },
-          environment: "test", // Change this to "live" when you're ready to accept live PayPal payments
-          countryCode: "US", // Only needed for test. This will be automatically retrieved when you are in production.
-        }
-      },
+      // TODO: insert the adyen checkout configuration here. The input session parameter can be fed into the session parameter of the configuration.
       onPaymentCompleted: (result, component) => {
         console.info("onPaymentCompleted");
         console.info(result, component);

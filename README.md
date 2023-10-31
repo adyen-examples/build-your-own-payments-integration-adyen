@@ -63,8 +63,8 @@ We will be intentionally using an older version of the library and web component
 
 1. Prepare your backend to receive the `CreateCheckoutSessionRequest` and return the `CreateCheckoutSessionResponse`.
     * In `CheckoutResource.java`, build a valid sessions request based on the information you have collected from the client-side.
-        * You will need to set the return URL. We expect something of the format "http://localhost:8080/redirect?orderRef=orderRef" (or equivalent)
-          * The amount and line items are set statically by you in the server side, for simplicity's sake. In a real scenario, they would come from your database.
+        * You will need to set the return URL. We expect something of the format "http://localhost:8080/redirect?orderRef=orderRef" (or equivalent).
+          * The amount can be hard coded on the server side, for simplicity's sake. In a real scenario, they would come from your database.
         * The `applicationProperty` object contains useful information like your Merchant Account.
 2. Prepare your backend to receive the necessary webhook that will be triggered after the payment is completed.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen

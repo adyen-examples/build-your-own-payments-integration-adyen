@@ -72,10 +72,11 @@ We will be intentionally using an older version of the library and web component
         * Print the Merchant Reference, Alias and PSP reference contained in the notification.
         * Don't forget that you should return  `"[accepted]"` in your body.
         * _Note: Don't forget to create a new Standard webhook to receive data! In the Customer Area under the Developers → Webhooks section._ See [this article](https://github.com/adyen-examples/.github/blob/main/pages/webhooks-testing.md) for more information.
-3. Prepare your frontend to instantiate the session, and send valid information to your server
+3. Prepare your frontend to instantiate the session, and send valid information to your server.
     * In `layout.html` add the necessary imports for the library and web components. We will intentionally use the old version [Web Components/Drop-in v5.23.1](https://docs.adyen.com/online-payments/release-notes/?integration_type=web&tab=embed-script-and-stylesheet_2022-08-30-uzt4_2#releaseNote=2022-08-29-web-componentsdrop-in-5.23.1)
     * In `adyenImplementation.js`, we will have to do a few things. 
       * Call the `/api/sessions` endpoint in the `startCheckout` function to start handling the session.
+      * Handle the response by redirecting the user to the correct page
       * Complete the configuration of the `AdyenCheckout` object in the `createAdyenCheckout` function.
       * Note that if you are selecting a payment method that needs a redirect, the `finalizeCheckout` method will be called with a `sessionId` value. You do not need to do anything for this.
 4. Test your integration

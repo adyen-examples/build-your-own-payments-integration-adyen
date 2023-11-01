@@ -140,7 +140,7 @@ that's why the company decides to partner with their favorite charity and allow 
 
 4. Perform a successful gift card (partial) payment, can you use a gift card **and** a debit card payment to pay the remaining amount?
 
-** Tip: ** Yuu need to enable the gift cards payment method in the Customer Area.
+** Tip: ** You need to enable the gift cards payment method in the Customer Area.
 
 
 ## Module 3: Upgrading to the latest version of the library and Adyen Dropin/Web components

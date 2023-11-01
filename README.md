@@ -50,20 +50,18 @@ export ADYEN_HMAC_KEY="HMACKEY"
 
 ## Module 0: Building a simple checkout page.
 
-**Briefing:**
-You're working as a full-stack developer for an E-commerce website that sells socks in the Netherlands. In fact, they sell the best socks at 10.99$ each.
-It's your job to accept credit card payments, iDeal and klarna payments. Project #SOCKS.
-
-### Summary:
+### Briefing:
+You're working as a full-stack developer for an E-commerce website that sells socks in the Netherlands.
+In fact, they sell the best socks at 10.99$ each and you're extremely excited for Project #SOCKS.
+It's your job to do the integration with Adyen and accept credit card payments, iDeal and klarna payments.
 
 In this module, we will build a functional checkout page that will allow us to collect the information we need to make a payment request to Adyen. 
 
-We will be *intentionally* using an older version of the library and web components.
+We will be *intentionally* using an older version of the library and web components and work towards upgrading later on in the modules.
 
 * The Java V18 library (see `build.gradle`).
 * The adyen-web version 5.23.1 (see `layout.html`).
 
-### Guidelines
 
 1. Prepare your backend to receive the `CreateCheckoutSessionRequest` and return the `CreateCheckoutSessionResponse`.
     * In `CheckoutResource.java`, build a valid sessions request based on the information you have collected from the client-side.
@@ -94,30 +92,49 @@ We will be *intentionally* using an older version of the library and web compone
     * Finally, complete a credit-card payment successfully to finish this module.
 
 ## Module 1: Adding additional features & Advanced flow
-Project #SOCKS has been very successful. Not every one in the world can keep their feet warm, that's why the company decides to partner with their favorite charity and allow their customers to donate after every successful sock purchase!
+
+### Briefing:
+Project #SOCKS has been very successful. Not every one in the world can keep their feet warm,
+that's why the company decides to partner with their favorite charity and allow their customers to donate after every successful sock purchase!
 
 1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
-  * You'll notice that you have to change your existing backend and frontend flows: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
-  * The `/sessions` calls: `/paymentmethods` (retrieves available payment methods) `/payments` (starts a transaction) and `/payments/details` (submits payment details), this means we have to change two things:
+  * You'll notice that you have to change your existing backend and frontend flows.
+  * The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
+  This means we'll have to change a couple of things on our front- and backend according to: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
     * Frontend: We need to override several event handlers and handle the subsequent calls.
     * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
 
 2. Prepare your backend to handle the incoming donation webhook.
-    * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen
+    * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen.
+    * Validate the HMAC signature of the webhook.
+    * Tip: Notice that the webhook is different and that you'll have to create a different endpoint to receive this webhook.
 
-3. Update your frontend so that it contains a donation screen that calls your backend.
-    * Using Adyen Components, add and mount the div accordingly. The button should call your respective endpoint that you've implemented in step 1.
+3. Update your frontend so that it contains a donation screen that calls your backend when a donation-amount is specified.
+    * Using Adyen Components, add and mount the `<div>` accordingly. The button should call your respective endpoint that you've implemented in step 1.
+    * Tip: You can save the donationToken/pspReference in your cookie session.
 
-4. Perform a donation to finish this module.
+4. Perform a successful donation to finish this module and make sure to receive the webhook.
 
 **Tip:** You need to enable donations in the Customer Area / Backoffice.
 
 
-## Module 2: We've noticed that some of our customers would love to give their friends some nice socks as a gift.
+## Module 2: Adding gift cards
+
+### Briefing: We've noticed that some of our customers would love to give their friends some nice socks as a gift. But we'd like the friends to choose their own favorite socks.
 
 1. Prepare your backend to handle gift cards: https://docs.adyen.com/payment-methods/gift-cards/
 
 2. Prepare your backend to handle the respective gift card webhooks.
+   * Validate the HMAC signature of the incoming webhooks
+   * Print the amounts that the ORDER_CLOSED webhook has
+
+3. Prepare the frontend
+   * When using drop-in, partial payments are handled within the drop-in component.
+   * When using components, you'll have to handle the remaining amount yourself by overriding the respective handler
+
+4. Perform a successful gift card (partial) payment, can you use a gift card **and** a debit card payment to pay the remaining amount?
+
+** Tip: ** Yuu need to enable the gift cards payment method in the Customer Area.
 
 
 ## Module 3: Upgrading to the latest version of the library and Adyen Dropin/Web components.

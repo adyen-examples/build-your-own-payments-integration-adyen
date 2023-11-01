@@ -48,24 +48,29 @@ export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
 export ADYEN_HMAC_KEY="HMACKEY"
 ```
 
-## Module 0 : Building a simple checkout page.
+## Module 0: Building a simple checkout page.
 
-### Summary :
+**Briefing:**
+You're working as a full-stack developer for an E-commerce website that sells socks in the Netherlands. In fact, they sell the best socks at 10.99$ each.
+It's your job to accept credit card payments, iDeal and klarna payments. Project #SOCKS.
+
+### Summary:
 
 In this module, we will build a functional checkout page that will allow us to collect the information we need to make a payment request to Adyen. 
 
-We will be intentionally using an older version of the library and web components. 
+We will be *intentionally* using an older version of the library and web components.
 
 * The Java V18 library (see `build.gradle`).
 * The adyen-web version 5.23.1 (see `layout.html`).
 
-### Steps to implement :
+### Guidelines
 
 1. Prepare your backend to receive the `CreateCheckoutSessionRequest` and return the `CreateCheckoutSessionResponse`.
     * In `CheckoutResource.java`, build a valid sessions request based on the information you have collected from the client-side.
         * You will need to set the return URL. We expect something of the format "http://localhost:8080/redirect?orderRef=orderRef" (or equivalent).
           * The amount can be hard coded on the server side, for simplicity's sake. In a real scenario, they would come from your database.
         * The `applicationProperty` object contains useful information like your Merchant Account.
+        * Make sure that your request contain an idempotency key. // ?
 2. Prepare your backend to receive the necessary webhook that will be triggered after the payment is completed.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen
         * Validate the `hmacKey`, you can use the `this.applicationProperty.getHmacKey()` helper function
@@ -80,11 +85,57 @@ We will be intentionally using an older version of the library and web component
       * Complete the configuration of the `AdyenCheckout` object in the `createAdyenCheckout` function.
       * Note that if you are selecting a payment method that needs a redirect, the `finalizeCheckout` method will be called with a `sessionId` value. You do not need to do anything for this.
 4. Test your integration
-    * Run `./gradlew bootRun` to start the server, and open `http://localhost:8080/` in your browser. Complete a payment successfully to finish this module.
+    * Run `./gradlew bootRun` to start the server, and open `http://localhost:8080/` in your browser
+5. Add a payment method
+    * Add klarna (pay now, pay later and pay in installments) as a payment method in the Customer Area
+    * Complete a klarna payment
+    * Add iDeal as a payment method in the Customer Area
+    * Complete an iDeal payment
+    * Finally, complete a credit-card payment successfully to finish this module.
 
-## Module 1 : Upgrading to the latest version of the library and web components.
+## Module 1: Adding additional features & Advanced flow
+Project #SOCKS has been very successful. Not every one in the world can keep their feet warm, that's why the company decides to partner with their favorite charity and allow their customers to donate after every successful sock purchase!
 
-* To be continued!
+1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
+  * You'll notice that you have to change your existing backend and frontend flows: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
+  * The `/sessions` calls: `/paymentmethods` (retrieves available payment methods) `/payments` (starts a transaction) and `/payments/details` (submits payment details), this means we have to change two things:
+    * Frontend: We need to override several event handlers and handle the subsequent calls.
+    * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
+
+2. Prepare your backend to handle the incoming donation webhook.
+    * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen
+
+3. Update your frontend so that it contains a donation screen that calls your backend.
+    * Using Adyen Components, add and mount the div accordingly. The button should call your respective endpoint that you've implemented in step 1.
+
+4. Perform a donation to finish this module.
+
+**Tip:** You need to enable donations in the Customer Area / Backoffice.
+
+
+## Module 2: We've noticed that some of our customers would love to give their friends some nice socks as a gift.
+
+1. Prepare your backend to handle gift cards: https://docs.adyen.com/payment-methods/gift-cards/
+
+2. Prepare your backend to handle the respective gift card webhooks.
+
+
+## Module 3: Upgrading to the latest version of the library and Adyen Dropin/Web components.
+
+1. Upgrade your Java library to the latest version: https://github.com/Adyen/adyen-java-api-library/releases
+2. Upgrade your Adyen Dropin/Web Components to the latest version
+3. This module is successful when you can ensure that all functionality still works as-is.
+
+* Tip: Can we write tests *before doing the upgrade* to make sure that gift cards, donations, payments still work?
+  * Make an iDeal payment automatically
+  * Make a credit card payment automatically
+  * Make a Klarna payment automatically
+  * Make a donation
+  * Make a gift card payment
+
+
+
+This module is finished when everything still works after the upgrades.
 
 
 ## Contacting us

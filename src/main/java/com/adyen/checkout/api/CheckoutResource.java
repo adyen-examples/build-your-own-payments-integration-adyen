@@ -64,7 +64,6 @@ public class CheckoutResource {
                 .body(response);
     }
 
-
     @GetMapping("/handleShopperRedirect")
     public RedirectView redirect(@RequestParam(required = false) String payload, @RequestParam(required = false) String redirectResult, @RequestParam String orderRef) throws IOException, ApiException {
         // Handle redirect during payment (returnUrl)

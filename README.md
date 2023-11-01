@@ -9,9 +9,12 @@ In case you want to skip a module or compare your solution, you can checkout the
 
 _Note that the workshop is intended to highlight some of the pains of our customers when building and upgrading. We know there might be better ways to do things, with a deeper knowledge of the platform._
 
-The list of modules is as such : 
+The list of modules is as such :
 
-* Module 1 : Building a simple checkout page using sessions.
+- Module 0: Building a simple checkout page using sessions.
+- Module 1: Adding donations using the advanced flow.
+- Module 2: Adding gift cards.
+- Module 3: Upgrading to the latest version of the library and Adyen.Drop-in/Web Components.
 
 ### Context of the code repository.
 
@@ -48,14 +51,15 @@ export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
 export ADYEN_HMAC_KEY="HMACKEY"
 ```
 
-## Module 0: Building a simple checkout page.
+## Module 0: Building a simple checkout page
 
 ### Briefing:
-You're working as a full-stack developer for an E-commerce website that sells socks in the Netherlands.
-In fact, they sell the best socks at 10.99$ each and you're extremely excited for Project #SOCKS.
-It's your job to do the integration with Adyen and accept credit card payments, iDeal and klarna payments.
+You're working as a full-stack developer for an E-commerce website that sells headphones and sunglasses in the Netherlands.
+In fact, they sell the best headphones and sunglasses at 50.00 each and you're extremely excited to take on this challenge.
+It's your job to implement the integration using Adyen and accept credit card payments, iDeal & klarna payments.
 
-In this module, we will build a functional checkout page that will allow us to collect the information we need to make a payment request to Adyen. 
+In this module, we will build a functional checkout page that will allow us to collect the information we need to make a payment request to Adyen.
+For the sake of simplicity, we've hard-coded these items in the preview (cart) page.
 
 We will be *intentionally* using an older version of the library and web components and work towards upgrading later on in the modules.
 
@@ -91,11 +95,11 @@ We will be *intentionally* using an older version of the library and web compone
     * Complete an iDeal payment
     * Finally, complete a credit-card payment successfully to finish this module.
 
-## Module 1: Adding additional features & Advanced flow
+## Module 1: Adding donations & Advanced flow
 
 ### Briefing:
-Project #SOCKS has been very successful. Not every one in the world can keep their feet warm,
-that's why the company decides to partner with their favorite charity and allow their customers to donate after every successful sock purchase!
+Project #MyStore has been very successful. Not every one in the world can keep their feet warm,
+that's why the company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
 
 1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
   * You'll notice that you have to change your existing backend and frontend flows.
@@ -121,7 +125,7 @@ that's why the company decides to partner with their favorite charity and allow 
 
 ## Module 2: Adding gift cards
 
-### Briefing: We've noticed that some of our customers would love to give their friends some nice socks as a gift. But we'd like the friends to choose their own favorite socks.
+### Briefing: We've noticed that some of our customers would love to give their friends some nice headphones as a gift. They will have to order it through the website themselves.
 
 1. Prepare your backend to handle gift cards: https://docs.adyen.com/payment-methods/gift-cards/
 
@@ -139,13 +143,15 @@ that's why the company decides to partner with their favorite charity and allow 
 ** Tip: ** Yuu need to enable the gift cards payment method in the Customer Area.
 
 
-## Module 3: Upgrading to the latest version of the library and Adyen Dropin/Web components.
+## Module 3: Upgrading to the latest version of the library and Adyen Dropin/Web components
 
 1. Upgrade your Java library to the latest version: https://github.com/Adyen/adyen-java-api-library/releases
-2. Upgrade your Adyen Dropin/Web Components to the latest version
+2. Upgrade your Adyen Drop-in/Web Components to the latest version:
 3. This module is successful when you can ensure that all functionality still works as-is.
 
-* Tip: Can we write tests *before doing the upgrade* to make sure that gift cards, donations, payments still work?
+**WIP**  // TODO
+* Tip: Let's write tests *before doing the upgrade* to make sure that gift cards, donations, payments still work.
+You can use an E2E testing framework like: https://playwright.dev/java/docs/intro
   * Make an iDeal payment automatically
   * Make a credit card payment automatically
   * Make a Klarna payment automatically

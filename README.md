@@ -123,10 +123,12 @@ that's why the company decides to partner with their favorite charity and allow 
 ### Briefing: We've noticed that some of our customers would love to give their friends some nice socks as a gift. But we'd like the friends to choose their own favorite socks.
 
 1. Prepare your backend to handle gift cards: https://docs.adyen.com/payment-methods/gift-cards/
+   *
 
 2. Prepare your backend to handle the respective gift card webhooks.
    * Validate the HMAC signature of the incoming webhooks
-   * Print the amounts that the ORDER_CLOSED webhook has
+   * Print or log the amount values that the ORDER_CLOSED webhook contains in the additionalData property.
+   * Make sure to handle the AUTHORISATION webhook, ORDER_OPENED and ORDER_CLOSED webhooks accordingly.
 
 3. Prepare the frontend
    * When using drop-in, partial payments are handled within the drop-in component.
@@ -152,7 +154,7 @@ that's why the company decides to partner with their favorite charity and allow 
 
 
 
-This module is finished when everything still works after the upgrades.
+This module is finished when all of the above still work after the upgrades.
 
 
 ## Contacting us

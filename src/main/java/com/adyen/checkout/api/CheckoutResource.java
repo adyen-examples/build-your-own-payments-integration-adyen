@@ -8,9 +8,14 @@ import java.util.UUID;
 
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.model.Amount;
+import com.adyen.model.modification.DonationRequest;
+import com.adyen.model.modification.ModificationResult;
 import com.adyen.service.Checkout;
+import com.adyen.service.Modification;
 import com.adyen.service.resource.checkout.PaymentsDetails;
+import com.adyen.service.resource.modification.Donate;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +38,13 @@ public class CheckoutResource {
 
     private final Checkout checkout;
 
+    private final Modification modification;
+
+    // TODO: persist this in a map in-memory-cache, so that we do not only support one donation at a given time
+    private static final String DONATION_TOKEN = "DonationToken";
+
+    private static final String PAYMENT_ORIGINAL_PSPREFERENCE = "PaymentOriginalPspReference";
+
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
         this.applicationProperty = applicationProperty;
@@ -44,6 +56,7 @@ public class CheckoutResource {
 
         var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
         this.checkout = new Checkout(client);
+        this.modification = new Modification(client);
     }
 
     /**
@@ -79,11 +92,11 @@ public class CheckoutResource {
         var orderRef = UUID.randomUUID().toString();
         var amount = new Amount()
                 .currency("EUR")
-                .value(10000L); // value is 10€ in minor units
+                .value(10000L);
 
-        paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount()); // required
+        paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentsRequest.ChannelEnum.WEB);
-        paymentRequest.setReference(orderRef); // required
+        paymentRequest.setReference(orderRef);
         paymentRequest.setReturnUrl(request.getScheme() + "://" + host + "/api/handleShopperRedirect?orderRef=" + orderRef);
 
         paymentRequest.setAmount(amount);
@@ -168,5 +181,49 @@ public class CheckoutResource {
                 break;
         }
         return new RedirectView(redirectURL + "?reason=" + response.getResultCode());
+    }
+
+    /**
+     * {@code POST  /donations} : Perform a donation
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (Ok)} and with body the donationPaymentResponse response.
+     * @throws IOException  from Adyen API.
+     * @throws ApiException from Adyen API.
+     */
+    @PostMapping("/donations")
+    public ResponseEntity donations(@RequestBody Amount body, @RequestHeader String host, HttpServletRequest request) throws IOException, ApiException {
+        DonationRequest donationRequest = new DonationRequest();
+        HttpSession session = request.getSession();
+        var pspReference = session.getAttribute(PAYMENT_ORIGINAL_PSPREFERENCE);
+        var donationToken = session.getAttribute(DONATION_TOKEN);
+
+        if (pspReference == null) {
+            log.info("Could not find the PspReference in the stored session.");
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (donationToken == null) {
+            log.info("Could not find the DonationToken in the stored session.");
+            return ResponseEntity.badRequest().build();
+        }
+
+        var amount = new Amount();
+        amount.setCurrency(body.getCurrency());
+        amount.setValue(body.getValue());
+
+        donationRequest.setModificationAmount(amount);
+        donationRequest.reference(UUID.randomUUID().toString());
+        //donationRequest.setPaymentMethod(new CheckoutPaymentMethod(new CardDetails()));
+        //donationRequest.setDonationToken(donationToken.toString());
+        donationRequest.setOriginalReference(pspReference.toString());
+        //donationRequest.setDonationAccount(this.applicationProperty.getDonationMerchantAccount());
+        //donationRequest.returnUrl(request.getScheme() + "://" + host);
+        donationRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
+        //donationRequest.shopperInteraction(DonationPaymentRequest.ShopperInteractionEnum.CONTAUTH);
+
+        ModificationResult result = this.modification.donate(donationRequest);
+
+        return ResponseEntity.ok()
+                .body(result);
     }
 }

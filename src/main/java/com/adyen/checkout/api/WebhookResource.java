@@ -92,6 +92,37 @@ public class WebhookResource {
         return ResponseEntity.ok().body("[accepted]");
     }
 
+    @PostMapping("/webhooks/giving")
+    public ResponseEntity<String> webhooksGiving(@RequestBody String json) throws IOException {
+        // from JSON string to object
+        var notificationRequest = notificationHandler.handleNotificationJson(json);
+
+        // fetch first (and only) NotificationRequestItem
+        var notificationRequestItem = notificationRequest.getNotificationItems().stream().findFirst();
+
+        if (notificationRequestItem.isPresent()) {
+
+            var item = notificationRequestItem.get();
+
+            log.info("""
+                        Received webhook with event {} :\s
+                        Merchant Account Code: {}
+                        PSP reference : {}
+                        Donation successful : {}
+                        """
+                    , item.getEventCode(), item.getMerchantAccountCode(), item.getPspReference(), item.isSuccess());
+
+            // consume giving webhook asynchronously
+
+        } else {
+            // Unexpected event with no payload: do not send [accepted] response
+            log.warn("Empty NotificationItem");
+        }
+
+        // Acknowledge event has been consumed
+        return ResponseEntity.ok().body("[accepted]");
+    }
+
     @Bean
     public HMACValidator getHmacValidator() {
         return new HMACValidator();

@@ -117,6 +117,16 @@ public class CheckoutResource {
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = checkout.payments(paymentRequest);
+
+        var session = request.getSession();
+        if (response.getDonationToken() == null) {
+            log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
+        }
+        else {
+            session.setAttribute(PAYMENT_ORIGINAL_PSPREFERENCE, response.getPspReference());
+            session.setAttribute(DONATION_TOKEN, response.getDonationToken());
+        }
+
         return ResponseEntity.ok()
                 .body(response);
     }

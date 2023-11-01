@@ -103,6 +103,7 @@ that's why the company decides to partner with their favorite charity and allow 
   This means we'll have to change a couple of things on our front- and backend according to: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
     * Frontend: We need to override several event handlers and handle the subsequent calls.
     * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
+    * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`
 
 2. Prepare your backend to handle the incoming donation webhook.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen.
@@ -123,7 +124,6 @@ that's why the company decides to partner with their favorite charity and allow 
 ### Briefing: We've noticed that some of our customers would love to give their friends some nice socks as a gift. But we'd like the friends to choose their own favorite socks.
 
 1. Prepare your backend to handle gift cards: https://docs.adyen.com/payment-methods/gift-cards/
-   *
 
 2. Prepare your backend to handle the respective gift card webhooks.
    * Validate the HMAC signature of the incoming webhooks

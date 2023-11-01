@@ -2,12 +2,21 @@ package com.adyen.checkout.api;
 
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.model.notification.NotificationRequest;
+import com.adyen.model.notification.NotificationRequestItem;
+import com.adyen.notification.NotificationHandler;
+import com.adyen.util.HMACValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import javax.management.Notification;
+import java.io.IOException;
 import java.security.SignatureException;
 
 /**
@@ -18,28 +27,104 @@ import java.security.SignatureException;
 public class WebhookResource {
     private final Logger log = LoggerFactory.getLogger(WebhookResource.class);
 
-    private ApplicationProperty applicationProperty;
+    private final ApplicationProperty applicationProperty;
+
+    private final NotificationHandler notificationHandler;
 
     @Autowired
     public WebhookResource(ApplicationProperty applicationProperty) {
         this.applicationProperty = applicationProperty;
 
-        if(this.applicationProperty.getHmacKey() == null) {
+        if (this.applicationProperty.getHmacKey() == null) {
             log.warn("ADYEN_HMAC_KEY is UNDEFINED (Webhook cannot be authenticated)");
             //throw new RuntimeException("ADYEN_HMAC_KEY is UNDEFINED");
         }
+
+        notificationHandler = new NotificationHandler();
     }
 
     /**
-     * Process incoming Webhook notifications
-     * @param notificationRequest
+     * Process incoming Webhook notification: get NotificationRequestItem, validate HMAC signature,
+     * consume the event asynchronously, send response ["accepted"]
+     *
+     * @param json Payload of the webhook event
      * @return
      */
     @PostMapping("/webhooks/notifications")
-    public ResponseEntity<String> webhooks(@RequestBody NotificationRequest notificationRequest){
+    public ResponseEntity<String> webhooks(@RequestBody String json) throws IOException {
 
-        // TODO : Validate the notificationRequest here
-        
+        // from JSON string to object
+        var notificationRequest = notificationHandler.handleNotificationJson(json);
+
+        // fetch first (and only) NotificationRequestItem
+        var notificationRequestItem = notificationRequest.getNotificationItems().stream().findFirst();
+
+        if (notificationRequestItem.isPresent()) {
+
+            var item = notificationRequestItem.get();
+
+            try {
+                if (getHmacValidator().validateHMAC(item, this.applicationProperty.getHmacKey())) {
+                    log.info("""
+                            Received webhook with event {} :\s
+                            Merchant Reference: {}
+                            Alias : {}
+                            PSP reference : {}"""
+                            , item.getEventCode(), item.getMerchantReference(), item.getAdditionalData().get("alias"), item.getPspReference());
+
+                    // consume the notification/event here
+
+                } else {
+                    // invalid HMAC signature: do not send [accepted] response
+                    log.warn("Could not validate HMAC signature for incoming webhook message: {}", item);
+                    throw new RuntimeException("Invalid HMAC signature");
+                }
+            } catch (SignatureException e) {
+                // Unexpected error during HMAC validation: do not send [accepted] response
+                log.error("Error while validating HMAC Key", e);
+            }
+
+        } else {
+            // Unexpected event with no payload: do not send [accepted] response
+            log.warn("Empty NotificationItem");
+        }
+
         return ResponseEntity.ok().body("[accepted]");
+    }
+
+    @PostMapping("/webhooks/giving")
+    public ResponseEntity<String> webhooksGiving(@RequestBody String json) throws IOException {
+        // from JSON string to object
+        var notificationRequest = notificationHandler.handleNotificationJson(json);
+
+        // fetch first (and only) NotificationRequestItem
+        var notificationRequestItem = notificationRequest.getNotificationItems().stream().findFirst();
+
+        if (notificationRequestItem.isPresent()) {
+
+            var item = notificationRequestItem.get();
+
+            log.info("""
+                        Received webhook with event {} :\s
+                        Merchant Account Code: {}
+                        PSP reference : {}
+                        Donation successful : {}
+                        """
+                    , item.getEventCode(), item.getMerchantAccountCode(), item.getPspReference(), item.isSuccess());
+
+            // consume giving webhook asynchronously
+
+        } else {
+            // Unexpected event with no payload: do not send [accepted] response
+            log.warn("Empty NotificationItem");
+        }
+
+        // Acknowledge event has been consumed
+        return ResponseEntity.ok().body("[accepted]");
+    }
+
+    @Bean
+    public HMACValidator getHmacValidator() {
+        return new HMACValidator();
     }
 }

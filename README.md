@@ -98,8 +98,8 @@ We will be *intentionally* using an older version of the library and web compone
 ## Module 1: Adding donations & Advanced flow
 
 ### Briefing:
-Project #MyStore has been very successful. Not every one in the world can keep their feet warm,
-that's why the company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
+Project #MyStore has been very successful.
+The company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
 
 1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
   * You'll notice that you have to change your existing backend and frontend flows.

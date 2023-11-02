@@ -11,7 +11,7 @@ _Note that the workshop is intended to highlight some of the pains of our custom
 
 The list of modules is as such : 
 
-* [Module 0 : Building a simple checkout page using sessions](## Module 0 : Building a simple checkout page)
+* [Module 0 : Building a simple checkout page using sessions](#module-0--building-a-simple-checkout-page)
 
 ### Context of the code repository.
 
@@ -50,7 +50,7 @@ export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
 export ADYEN_HMAC_KEY="HMACKEY"
 ```
 
-## Module 0 : Building a simple checkout page
+## Module 0 - Building a simple checkout page
 
 ### Summary :
 

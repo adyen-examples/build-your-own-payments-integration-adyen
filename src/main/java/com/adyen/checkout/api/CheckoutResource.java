@@ -78,7 +78,7 @@ public class CheckoutResource {
 
     @PostMapping("/sessions")
     // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity<> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
+    public ResponseEntity sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
         // TODO : Create a valid sessions request here based on the input of that function
         var response = "";
         return ResponseEntity.ok().body(response);

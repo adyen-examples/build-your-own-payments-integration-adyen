@@ -12,10 +12,11 @@ _Note that the workshop is intended to highlight some of the pains of our custom
 The list of modules is as such :
 
 
-* [Module 0: Building a simple checkout page using sessions](module-0-building-a-simple-checkout-page)
-* Module 1: Adding donations using the advanced flow.
-* Module 2: Adding gift cards.
-* Module 3: Upgrading to the latest version of the library and Adyen.Drop-in/Web Components.
+* [Module 0 : Building a simple checkout page using sessions](module-0-building-a-simple-checkout-page)
+* [Module 1 : Building an advanced checkout page using the advanced flow.]
+* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components]
+* [Module 3 : Adding donations.]
+* [Module 4 : Adding gift cards.]
 
 ### Context of the code repository.
 
@@ -54,7 +55,7 @@ export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
 export ADYEN_HMAC_KEY="HMACKEY"
 ```
 
-## Module 0: Building a simple checkout page
+## Module 0 : Building a simple checkout page
 
 ### Briefing:
 You're working as a full-stack developer for an E-commerce website that sells headphones and sunglasses in the Netherlands.
@@ -69,13 +70,12 @@ We will be *intentionally* using an older version of the library and web compone
 * The Java V18 library (see `build.gradle`).
 * The adyen-web version 5.23.1 (see `layout.html`).
 
-
 1. Prepare your backend to receive the `CreateCheckoutSessionRequest` and return the `CreateCheckoutSessionResponse`.
     * In `CheckoutResource.java`, build a valid sessions request based on the information you have collected from the client-side.
         * You will need to set the return URL. We expect something of the format ".../redirect?orderRef=orderRef" (or equivalent)
           * The amount is set statically by you in the server side, for simplicity's sake. In a real scenario, they would come from your database.
         * The `applicationProperty` object contains useful information like your Merchant Account.
-        * Make sure that your request contain an idempotency key. // ?
+        * Make sure that your request contain an idempotency key.
 2. Prepare your backend to receive the necessary webhook that will be triggered after the payment is completed.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen
         * Validate the `hmacKey`, you can use the `this.applicationProperty.getHmacKey()` helper function
@@ -99,19 +99,51 @@ We will be *intentionally* using an older version of the library and web compone
     * Complete an iDeal payment
     * Finally, complete a credit-card payment successfully to finish this module.
 
-## Module 1: Adding donations & Advanced flow
+## Module 1 : Building an advanced checkout page using the advanced flow.
 
 ### Briefing:
-Project #MyStore has been very successful.
-The company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
+It turns out hard-coding the amount was not the best idea.
+Now, every time a customer **has** to buy a pair of headphones and sunglasses. Not very ideal :), shoppers should be able to add items and the amount needs to update accordingly.
+
+In this module, we will build an advanced checkout page using the advanced flow.
+The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
+This means we'll have to change a couple of things on our front- and backend according to: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
+  * Frontend: We need to override several event handlers and handle the subsequent calls.
+  * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
+  * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`
+
+
+## Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components
+
+### Briefing:
+Project #MyStore has been very successful. The company wants to give their shoppers the option to donate, after every successful payment, as part of their on-going charity efforts.
+You're extremely glad that you've just implemented the advanced flow to support donations, see [documentation](https://docs.adyen.com/online-payments/donations/web-component/#before-you-begin).
+However, the current version of the Java library doesn't support donations. Let's upgrade the library and while we're at it, upgrade Adyen Drop-in/Components as well.
+
+Upgrades should be easy, right...?
+
+1. Upgrade your Java library to the latest version: https://github.com/Adyen/adyen-java-api-library/releases
+2. Upgrade your Adyen Drop-in/Web Components to the latest version: https://docs.adyen.com/online-payments/release-notes/?integration_type=web
+3. This module is successful when you can ensure your integration still works as-before.
+
+/*--- TODO: Let's decide whether we want to use playwright?
+* Tip: Let's write tests *before doing the upgrade* to make sure that gift cards, donations, payments still work.
+You can use an E2E testing framework like: https://playwright.dev/java/docs/intro
+  * Make an iDeal payment automatically
+  * Make a credit card payment automatically
+  * Make a Klarna payment automatically
+  * Make a donation
+  * Make a gift card payment
+---*/
+
+
+## Module 3 : Adding donations
+It's show-time! The company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
+Time to prepare your backend to perform donations.
 
 1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
   * You'll notice that you have to change your existing backend and frontend flows.
-  * The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
-  This means we'll have to change a couple of things on our front- and backend according to: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
-    * Frontend: We need to override several event handlers and handle the subsequent calls.
-    * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
-    * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`
+
 
 2. Prepare your backend to handle the incoming donation webhook.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen.
@@ -124,47 +156,29 @@ The company decides to partner with their favorite charity and allow their custo
 
 4. Perform a successful donation to finish this module and make sure to receive the webhook.
 
-**Tip:** You need to enable donations in the Customer Area / Backoffice.
+**Tip:** You need to enable donations in the Customer Area & an ADP in the Backoffice.
 
 
-## Module 2: Adding gift cards
+## Module 4: Adding gift cards
 
-### Briefing: We've noticed that some of our customers would love to give their friends some nice headphones as a gift. They will have to order it through the website themselves.
+### Briefing:
+We've noticed that some of our customers would love to give their friends some nice headphones as a gift.
+They will have to order it through the website themselves.
 
-1. Prepare your backend to handle gift cards: https://docs.adyen.com/payment-methods/gift-cards/
+1. Prepare your backend to handle gift cards, see [documentation](https://docs.adyen.com/payment-methods/gift-cards/).
 
 2. Prepare your backend to handle the respective gift card webhooks.
-   * Validate the HMAC signature of the incoming webhooks
+   * Validate the HMAC signature of the incoming webhooks.
    * Print or log the amount values that the ORDER_CLOSED webhook contains in the additionalData property.
    * Make sure to handle the AUTHORISATION webhook, ORDER_OPENED and ORDER_CLOSED webhooks accordingly.
 
-3. Prepare the frontend
+3. Prepare the frontend.
    * When using drop-in, partial payments are handled within the drop-in component.
-   * When using components, you'll have to handle the remaining amount yourself by overriding the respective handler
+   * When using components, you'll have to handle the remaining amount yourself by overriding the handler.
 
 4. Perform a successful gift card (partial) payment, can you use a gift card **and** a debit card payment to pay the remaining amount?
 
 ** Tip: ** You need to enable the gift cards payment method in the Customer Area.
-
-
-## Module 3: Upgrading to the latest version of the library and Adyen Dropin/Web components
-
-1. Upgrade your Java library to the latest version: https://github.com/Adyen/adyen-java-api-library/releases
-2. Upgrade your Adyen Drop-in/Web Components to the latest version:
-3. This module is successful when you can ensure that all functionality still works as-is.
-
-**WIP**  // TODO
-* Tip: Let's write tests *before doing the upgrade* to make sure that gift cards, donations, payments still work.
-You can use an E2E testing framework like: https://playwright.dev/java/docs/intro
-  * Make an iDeal payment automatically
-  * Make a credit card payment automatically
-  * Make a Klarna payment automatically
-  * Make a donation
-  * Make a gift card payment
-
-
-
-This module is finished when all of the above still work after the upgrades.
 
 
 ## Contacting us

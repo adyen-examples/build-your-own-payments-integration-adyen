@@ -2,15 +2,14 @@ package com.adyen.checkout.api;
 
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.model.notification.NotificationRequest;
-import com.adyen.model.notification.NotificationRequestItem;
-import com.adyen.util.HMACValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.security.SignatureException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST controller for receiving Adyen webhook notifications
@@ -28,7 +27,7 @@ public class WebhookResource {
 
         if(this.applicationProperty.getHmacKey() == null) {
             log.warn("ADYEN_HMAC_KEY is UNDEFINED (Webhook cannot be authenticated)");
-            //throw new RuntimeException("ADYEN_HMAC_KEY is UNDEFINED");
+            throw new RuntimeException("ADYEN_HMAC_KEY is UNDEFINED");
         }
     }
 
@@ -41,7 +40,7 @@ public class WebhookResource {
     public ResponseEntity<String> webhooks(@RequestBody NotificationRequest notificationRequest){
 
         // TODO : Validate the notificationRequest here
-        
+
         return ResponseEntity.ok().body("[accepted]");
     }
 }

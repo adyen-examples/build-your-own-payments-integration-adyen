@@ -11,7 +11,7 @@ async function startCheckout() {
   const type = document.getElementById("type").innerHTML;
 
   try {
-    //TODO : call the server "/api/sessions?type=" + type", and feed the response of the server to the createAdyenCheckout function. You can use the callServer function help for that.
+    //TODO : call the server "/api/sessions?type=" + type", and feed the response of the server to the createAdyenCheckout function. You can use the sendPostRequest function help for that.
     const checkout = await createAdyenCheckout(checkoutSessionResponse);
     checkout.create(type).mount(document.getElementById("payment"));
   } catch (error) {
@@ -50,7 +50,7 @@ async function createAdyenCheckout(session){
 }
 
 // Calls your server endpoints
-async function callServer(url, data) {
+async function sendPostRequest(url, data) {
   const res = await fetch(url, {
     method: "POST",
     body: data ? JSON.stringify(data) : "",

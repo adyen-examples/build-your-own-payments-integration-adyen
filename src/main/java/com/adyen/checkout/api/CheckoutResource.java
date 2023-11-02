@@ -5,26 +5,23 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
-
 import com.adyen.checkout.ApplicationProperty;
-import com.adyen.model.Amount;
-import com.adyen.model.modification.DonationRequest;
-import com.adyen.model.modification.ModificationResult;
 import com.adyen.service.Checkout;
-import com.adyen.service.Modification;
-import com.adyen.service.resource.checkout.PaymentsDetails;
-import com.adyen.service.resource.modification.Donate;
+import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.adyen.model.Amount;
+import com.adyen.model.modification.DonationRequest;
+import com.adyen.model.modification.ModificationResult;
+import com.adyen.service.Modification;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.servlet.view.RedirectView;
 import com.adyen.Client;
 import com.adyen.enums.Environment;
 import com.adyen.model.checkout.*;
-import com.adyen.service.exception.ApiException;
 
 /**
  * REST controller for using Adyen checkout API
@@ -68,6 +65,7 @@ public class CheckoutResource {
      */
     @PostMapping("/getPaymentMethods")
     public ResponseEntity<PaymentMethodsResponse> paymentMethods() throws IOException, ApiException {
+        // TODO: Instantiate a new Checkout Client here
         var paymentMethodsRequest = new PaymentMethodsRequest();
         paymentMethodsRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentMethodsRequest.setChannel(PaymentMethodsRequest.ChannelEnum.WEB);
@@ -76,6 +74,14 @@ public class CheckoutResource {
         var response = checkout.paymentMethods(paymentMethodsRequest);
         return ResponseEntity.ok()
                 .body(response);
+    }
+
+    @PostMapping("/sessions")
+    // TODO : Add the correct return type here for the ResponseEntity
+    public ResponseEntity<> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
+        // TODO : Create a valid sessions request here based on the input of that function
+        var response = "";
+        return ResponseEntity.ok().body(response);
     }
 
     /**

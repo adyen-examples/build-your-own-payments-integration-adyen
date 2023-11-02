@@ -11,15 +11,18 @@ _Note that the workshop is intended to highlight some of the pains of our custom
 
 The list of modules is as such :
 
-- Module 0: Building a simple checkout page using sessions.
-- Module 1: Adding donations using the advanced flow.
-- Module 2: Adding gift cards.
-- Module 3: Upgrading to the latest version of the library and Adyen.Drop-in/Web Components.
+
+* [Module 0: Building a simple checkout page using sessions](module-0-building-a-simple-checkout-page)
+* Module 1: Adding donations using the advanced flow.
+* Module 2: Adding gift cards.
+* Module 3: Upgrading to the latest version of the library and Adyen.Drop-in/Web Components.
 
 ### Context of the code repository.
 
 In this workshop, we are using Java and Spring Boot, together with a static frontend based on thymelead template.
 We use those because we want to reduce the amount of prerequisite knowledge (like a frontend framework) and use a strongly typed language for the backend to build empathy for the customer experience.
+
+_In case the static frontend environment is not to your liking, feel free to implement your own frontend solution using the framework of your choice. However, note that it will take precious time away from the actual exercises._
 
 In this workshop we are not asking you to build a complete integration, but rather to fill in the voids based on resources you can find in our docs and other online resources.
 
@@ -69,8 +72,8 @@ We will be *intentionally* using an older version of the library and web compone
 
 1. Prepare your backend to receive the `CreateCheckoutSessionRequest` and return the `CreateCheckoutSessionResponse`.
     * In `CheckoutResource.java`, build a valid sessions request based on the information you have collected from the client-side.
-        * You will need to set the return URL. We expect something of the format "http://localhost:8080/redirect?orderRef=orderRef" (or equivalent).
-          * The amount can be hard coded on the server side, for simplicity's sake. In a real scenario, they would come from your database.
+        * You will need to set the return URL. We expect something of the format ".../redirect?orderRef=orderRef" (or equivalent)
+          * The amount is set statically by you in the server side, for simplicity's sake. In a real scenario, they would come from your database.
         * The `applicationProperty` object contains useful information like your Merchant Account.
         * Make sure that your request contain an idempotency key. // ?
 2. Prepare your backend to receive the necessary webhook that will be triggered after the payment is completed.
@@ -78,14 +81,15 @@ We will be *intentionally* using an older version of the library and web compone
         * Validate the `hmacKey`, you can use the `this.applicationProperty.getHmacKey()` helper function
         * Print the Merchant Reference, Alias and PSP reference contained in the notification.
         * Don't forget that you should return  `"[accepted]"` in your body.
-        * _Note: Don't forget to create a new Standard webhook to receive data! In the Customer Area under the Developers → Webhooks section._ See [documentation](https://docs.adyen.com/development-resources/webhooks/) for more information.
-3. Prepare your frontend to instantiate the session, and send valid information to your server.
+        * _Note: Don't forget to create a new Standard webhook to receive data! In the Customer Area under the Developers → Webhooks section._ See [the documentation](https://docs.adyen.com/development-resources/webhooks/) and  [this article](https://github.com/adyen-examples/.github/blob/main/pages/webhooks-testing.md) for more information on how to receive webhooks locally.
+3. Prepare your frontend to instantiate the session, and send valid information to your server
     * In `layout.html` add the necessary imports for the library and web components. We will intentionally use the old version [Web Components/Drop-in v5.23.1](https://docs.adyen.com/online-payments/release-notes/?integration_type=web&tab=embed-script-and-stylesheet_2022-08-30-uzt4_2#releaseNote=2022-08-29-web-componentsdrop-in-5.23.1)
-    * In `adyenImplementation.js`, we will have to do a few things. 
+    * In this workshop, we have chosen for a fully static, Javascript implementation for simplicity. All the implementation is contained in a single, `adyenImplementation.js` file.
+    * In `adyenImplementation.js`, you will have to do a few things. 
       * Call the `/api/sessions` endpoint in the `startCheckout` function to start handling the session.
       * Handle the response by redirecting the user to the correct page
       * Complete the configuration of the `AdyenCheckout` object in the `createAdyenCheckout` function.
-      * Note that if you are selecting a payment method that needs a redirect, the `finalizeCheckout` method will be called with a `sessionId` value. You do not need to do anything for this.
+      * Note that [if you are selecting a payment method that needs a redirect](https://docs.adyen.com/online-payments/build-your-integration/?platform=Web&integration=Components&version=5.53.2#handle-the-redirect), the `finalizeCheckout` method will be called with a `sessionId` value. You do not need to do anything for this.
 4. Test your integration
     * Run `./gradlew bootRun` to start the server, and open `http://localhost:8080/` in your browser
 5. Add a payment method
@@ -166,3 +170,6 @@ This module is finished when all of the above still work after the upgrades.
 ## Contacting us
 
 If you have any questions, feel free to contact us at devrel@adyen.com.
+
+* [Julien Lengrand-Lambert](https://github.com/jlengrand)
+* [Kwok He Chu](https://github.com/Kwok-he-Chu)

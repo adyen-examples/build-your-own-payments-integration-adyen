@@ -31,7 +31,8 @@ async function startCheckout() {
     };
     // `spring.jackson.default-property-inclusion=non_null` needs to set in
     // src/main/resources/application.properties to avoid NPE here
-    const checkout = await new AdyenCheckout(configuration);
+    //TODO : call the server "/api/sessions?type=" + type", and feed the response of the server to the createAdyenCheckout function. You can use the sendPostRequest function help for that.
+    const checkout = await  new AdyenCheckout(configuration);
     checkout.create(type).mount(document.getElementById("payment"));
   } catch (error) {
     console.error(error);

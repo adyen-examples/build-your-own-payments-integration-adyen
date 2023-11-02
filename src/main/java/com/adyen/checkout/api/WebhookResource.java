@@ -1,8 +1,6 @@
 package com.adyen.checkout.api;
 
 import com.adyen.checkout.ApplicationProperty;
-import com.adyen.model.notification.NotificationRequest;
-import com.adyen.model.notification.NotificationRequestItem;
 import com.adyen.notification.NotificationHandler;
 import com.adyen.util.HMACValidator;
 import org.slf4j.Logger;
@@ -14,8 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.management.Notification;
 import java.io.IOException;
 import java.security.SignatureException;
 
@@ -37,7 +33,7 @@ public class WebhookResource {
 
         if (this.applicationProperty.getHmacKey() == null) {
             log.warn("ADYEN_HMAC_KEY is UNDEFINED (Webhook cannot be authenticated)");
-            //throw new RuntimeException("ADYEN_HMAC_KEY is UNDEFINED");
+            throw new RuntimeException("ADYEN_HMAC_KEY is UNDEFINED");
         }
 
         notificationHandler = new NotificationHandler();
@@ -52,7 +48,6 @@ public class WebhookResource {
      */
     @PostMapping("/webhooks/notifications")
     public ResponseEntity<String> webhooks(@RequestBody String json) throws IOException {
-
         // from JSON string to object
         var notificationRequest = notificationHandler.handleNotificationJson(json);
 
@@ -88,7 +83,6 @@ public class WebhookResource {
             // Unexpected event with no payload: do not send [accepted] response
             log.warn("Empty NotificationItem");
         }
-
         return ResponseEntity.ok().body("[accepted]");
     }
 

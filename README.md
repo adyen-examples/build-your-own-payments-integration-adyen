@@ -50,7 +50,7 @@ export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
 export ADYEN_HMAC_KEY="HMACKEY"
 ```
 
-## Module 0 - Building a simple checkout page
+## Module 0 : Building a simple checkout page
 
 ### Summary :
 

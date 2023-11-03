@@ -1,4 +1,5 @@
 const clientKey = document.getElementById("clientKey").innerHTML;
+const totalAmount =  document.getElementById("totalAmount").innerHTML;
 const type = document.getElementById("type").innerHTML;
 
 async function initCheckout() {
@@ -19,7 +20,7 @@ async function initCheckout() {
           holderNameRequired: true,
           name: "Credit or debit card",
           amount: {
-            value: 10000,
+            value: totalAmount,
             currency: "EUR",
           },
         }

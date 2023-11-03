@@ -1,15 +1,16 @@
 package com.adyen.checkout.api;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
+
 import com.adyen.checkout.ApplicationProperty;
+import com.adyen.checkout.models.CartItemModel;
+import com.adyen.checkout.services.CartService;
 import com.adyen.model.Amount;
 import com.adyen.service.Checkout;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
@@ -29,6 +30,9 @@ public class CheckoutResource {
     private final ApplicationProperty applicationProperty;
 
     private final Checkout checkout;
+
+    @Autowired
+    private CartService cartService;
 
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
@@ -76,19 +80,28 @@ public class CheckoutResource {
         var orderRef = UUID.randomUUID().toString();
         var amount = new Amount()
                 .currency("EUR")
-                .value(10000L); // value is 10€ in minor units
+                .value(getCartService().getTotalAmount());
 
-        paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount()); // required
+        paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentsRequest.ChannelEnum.WEB);
-        paymentRequest.setReference(orderRef); // required
+        paymentRequest.setReference(orderRef);
         paymentRequest.setReturnUrl(request.getScheme() + "://" + host + "/api/handleShopperRedirect?orderRef=" + orderRef);
 
         paymentRequest.setAmount(amount);
+
+        var items = getCartService().getShoppingCart().getCartItems();
+
+        var lineItems = new ArrayList<LineItem>();
+        for (CartItemModel item : items) {
+            lineItems.add(new LineItem()
+                    .quantity(1L)
+                    .amountIncludingTax(item.getAmount())
+                    .description(item.getName()));
+        }
+
         // set lineItems required for some payment methods (ie Klarna)
-        paymentRequest.setLineItems(Arrays.asList(
-                new LineItem().quantity(1L).amountIncludingTax(5000L).description("Sunglasses"),
-                new LineItem().quantity(1L).amountIncludingTax(5000L).description("Headphones"))
-        );
+        paymentRequest.setLineItems(lineItems);
+
         // required for 3ds2 native flow
         paymentRequest.setAdditionalData(Collections.singletonMap("allow3DS2", "true"));
         // required for 3ds2 native flow
@@ -161,4 +174,13 @@ public class CheckoutResource {
         }
         return new RedirectView(redirectURL + "?reason=" + response.getResultCode());
     }
+
+    public CartService getCartService() {
+        return cartService;
+    }
+
+    public void setCartService(CartService cartService) {
+        this.cartService = cartService;
+    }
+
 }

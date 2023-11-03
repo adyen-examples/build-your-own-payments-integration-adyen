@@ -58,6 +58,7 @@ export ADYEN_HMAC_KEY="HMACKEY"
 ## Module 0 : Building a simple checkout page
 
 **Briefing**
+
 You're working as a full-stack developer for an E-commerce website that sells headphones and sunglasses in the Netherlands.
 In fact, they sell the best headphones and sunglasses at 50.00 each and you're extremely excited to take on this challenge.
 It's your job to implement the integration using Adyen and accept credit card payments, iDeal & klarna payments.
@@ -103,6 +104,7 @@ We will be *intentionally* using an older version of the library and web compone
 ## Module 1 : Building an advanced checkout page using the advanced flow
 
 **Briefing**
+
 It turns out hard-coding the amount was not the best idea.
 Now, every time a customer **has** to buy a pair of headphones and sunglasses. Not very ideal :), shoppers should be able to add items and the amount needs to update accordingly.
 One option is to use the `/sessions`-endpoint, and create a new sessionId and merchantReference for every change. This is quite on the heavy side.
@@ -111,8 +113,13 @@ An alternative option can be found here: [documentation](https://docs.adyen.com/
 In this module, we will build an advanced checkout page using the advanced flow. Here are some helpful tips:
 The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
 This means we'll have to change a couple of things on our front- and backend.
+  * We've provided some helper functions that stores the session of a user, use `CartService` to create an empty shoppingCart: add items to a cart, retrieve your shopping cart, or empty it.
+     * The idea is to extend the preview page with two buttons, one for adding headphones and another one for adding sunglasses.
+     * Once they are added, we need to keep track of the total amount and update our frontend accordingly (e.g. display the total amount on the frontend Drop-in page)
+     * The total amount needs to be visible on the "pay"-button of the Drop-in and the preview page.
+     * Once the shopper is done with their purchase, the shopping cart needs to be empty if the payment was successful.
   * Frontend: We need to override several event handlers and handle the subsequent calls.
-      * Show the amount that the shopper needs to pay on the drop-in.
+     * Show the amount that the shopper needs to pay on the drop-in.
   * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
      * The `initiatePayment` method should have a variable amount that can be changed according to the shopper's cart.
      * The `getPaymentMethods` and `submitAdditionalDetails` should be implemented in `CheckoutResource.java`.
@@ -123,6 +130,7 @@ This means we'll have to change a couple of things on our front- and backend.
 ## Module 2 : Upgrading to the latest version of the library and Adyen Drop-in
 
 **Briefing**
+
 Project #MyStore has been very successful. The company wants to give their shoppers the option to donate, after every successful payment, as part of their on-going charity efforts.
 You're extremely glad that you've just implemented the advanced flow to support donations, see [documentation](https://docs.adyen.com/online-payments/donations/web-component/#before-you-begin).
 However, the current version of the Java library doesn't support donations. Let's upgrade the library and while we're at it, upgrade Adyen Drop-in/Components as well.
@@ -137,6 +145,7 @@ Upgrades should be easy, right...?
 ## Module 3 : Adding donations
 
 **Briefing**
+
 It's show-time! The company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
 Time to prepare your backend to perform donations.
 
@@ -161,6 +170,7 @@ Time to prepare your backend to perform donations.
 ## Module 4 : Adding gift cards
 
 **Briefing**
+
 We've noticed that some of our customers would love to give their friends some nice headphones as a gift.
 They will have to order it through the website themselves.
 

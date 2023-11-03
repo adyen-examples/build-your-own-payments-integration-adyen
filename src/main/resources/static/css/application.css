@@ -52,7 +52,7 @@ a:hover {
   display: inline-block;
   font-size: 1em;
   font-weight: 500;
-  margin: 0;
+  margin: 8x;
   padding: 15px;
   text-align: center;
   transition: background 0.3s ease-out, box-shadow 0.3s ease-out;

@@ -2,22 +2,19 @@ const clientKey = document.getElementById("clientKey").innerHTML;
 
 // Used to finalize a checkout call in case of redirect
 const urlParams = new URLSearchParams(window.location.search);
-// Unique identifier for the payment session
-const sessionId = urlParams.get('sessionId');
+const sessionId = urlParams.get('sessionId'); // Unique identifier for the payment session
 const redirectResult = urlParams.get('redirectResult');
 
 // Typical checkout experience
 async function startCheckout() {
-  // Used in the application to know which type of checkout was chosen
+  // Used in the demo to know which type of checkout was chosen
   const type = document.getElementById("type").innerHTML;
 
   try {
-    // TODO: call the server "/api/sessions?type=" + type",
-    // and feed the `checkoutSessionResponse` of the server to the createAdyenCheckout function.
-    // You can use the `sendPostRequest` function help for that.
-
+    const checkoutSessionResponse = await sendPostRequest("/api/sessions?type=" + type);
     const checkout = await createAdyenCheckout(checkoutSessionResponse);
     checkout.create(type).mount(document.getElementById("payment"));
+
   } catch (error) {
     console.error(error);
     alert("Error occurred. Look at console for details");
@@ -38,7 +35,25 @@ async function finalizeCheckout() {
 async function createAdyenCheckout(session){
   return new AdyenCheckout(
       {
-        // TODO: insert the adyen checkout configuration here. The input session parameter can be fed into the session parameter of the configuration.
+        clientKey,
+        locale: "en_US",
+        environment: "test",
+        session: session,
+        showPayButton: true,
+        paymentMethodsConfiguration: {
+          ideal: {
+            showImage: true,
+          },
+          card: {
+            hasHolderName: true,
+            holderNameRequired: true,
+            name: "Credit or debit card",
+            amount: {
+              value: 10000,  // in minor units
+              currency: "EUR",
+            },
+          }
+        },
         onPaymentCompleted: (result, component) => {
           console.info("onPaymentCompleted");
           console.info(result, component);
@@ -53,7 +68,7 @@ async function createAdyenCheckout(session){
   );
 }
 
-// Helper function that sends a POST request to your backend
+// Calls your server endpoints
 async function sendPostRequest(url, data) {
   const res = await fetch(url, {
     method: "POST",
@@ -66,7 +81,6 @@ async function sendPostRequest(url, data) {
   return await res.json();
 }
 
-// Handles the response based on the resultCode.
 function handleServerResponse(res, _component) {
   switch (res.resultCode) {
     case "Authorised":
@@ -85,8 +99,4 @@ function handleServerResponse(res, _component) {
   }
 }
 
-if (!sessionId) {
-  startCheckout()
-} else {
-  finalizeCheckout();
-}
+if (!sessionId) { startCheckout() } else { finalizeCheckout(); }

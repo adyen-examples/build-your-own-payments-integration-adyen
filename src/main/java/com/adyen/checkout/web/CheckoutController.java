@@ -49,7 +49,6 @@ public class CheckoutController {
     @GetMapping("/result/{type}")
     public String result(@PathVariable String type, Model model) {
         model.addAttribute("type", type);
-        model.addAttribute("clientKey", this.applicationProperty.getClientKey());
         return "result";
     }
 

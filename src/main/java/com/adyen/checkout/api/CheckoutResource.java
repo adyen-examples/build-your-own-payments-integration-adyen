@@ -1,7 +1,13 @@
 package com.adyen.checkout.api;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
+import com.adyen.enums.Environment;
+import com.adyen.service.Checkout;
 import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -9,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.adyen.model.Amount;
-import org.springframework.web.servlet.view.RedirectView;
 import com.adyen.model.checkout.*;
 
 /**
@@ -22,127 +27,44 @@ public class CheckoutResource {
 
     private final ApplicationProperty applicationProperty;
 
-
-    // TODO: persist this in a map in-memory-cache, so that we do not only support one donation at a given time
-    private static final String DONATION_TOKEN = "DonationToken";
-
-    private static final String PAYMENT_ORIGINAL_PSPREFERENCE = "PaymentOriginalPspReference";
+    private final Checkout checkout;
 
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
         this.applicationProperty = applicationProperty;
 
-        if(applicationProperty.getApiKey() == null) {
+        if (applicationProperty.getApiKey() == null) {
             log.warn("ADYEN_KEY is UNDEFINED");
             throw new RuntimeException("ADYEN_KEY is UNDEFINED");
         }
 
-        // TODO instantiate the Adyen service/client classes to call our endpoints.
+        var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
+        this.checkout = new Checkout(client);
     }
-
-    /**
-     * {@code POST  /getPaymentMethods} : Get valid payment methods.
-     *
-     * @return the {@link ResponseEntity} with status {@code 200 (Ok)} and with body the paymentMethods response.
-     * @throws IOException  from Adyen API.
-     * @throws ApiException from Adyen API.
-     */
-    @PostMapping("/getPaymentMethods")
-    // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity paymentMethods() throws IOException, ApiException {
-        // TODO Create a valid paymentMethods call
-        var response = "";
-        return ResponseEntity.ok()
-                .body(response);
-    }
-
     @PostMapping("/sessions")
-    // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
-        // TODO : Create a valid sessions request here based on the input of that function
-        var response = "";
+    public ResponseEntity<CreateCheckoutSessionResponse> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
+        var orderRef = UUID.randomUUID().toString();
+        var amount = new Amount()
+                .currency("EUR")
+                .value(10000L); // value is 100€ in minor units
+
+        var checkoutSession = new CreateCheckoutSessionRequest();
+        checkoutSession.countryCode("NL");
+        checkoutSession.merchantAccount(this.applicationProperty.getMerchantAccount());
+        // (optional) set WEB to filter out payment methods available only for this platform
+        checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
+        checkoutSession.setReference(orderRef); // required
+        checkoutSession.setReturnUrl(request.getScheme() + "://" + host + "/redirect?orderRef=" + orderRef);
+        checkoutSession.setAmount(amount);
+
+        // set lineItems required for some payment methods (ie Klarna)
+        checkoutSession.setLineItems(Arrays.asList(
+                new LineItem().quantity(1L).amountIncludingTax(5000L).description("Sunglasses"),
+                new LineItem().quantity(1L).amountIncludingTax(5000L).description("Headphones"))
+        );
+
+        log.info("REST request to create Adyen Payment Session {}", checkoutSession);
+        var response = checkout.sessions(checkoutSession);
         return ResponseEntity.ok().body(response);
-    }
-
-    /**
-     * {@code POST  /initiatePayment} : Start a transaction.
-     *
-     * @return the {@link ResponseEntity} with status {@code 200 (Ok)} and with body the paymentMethods response.
-     * @throws IOException  from Adyen API.
-     * @throws ApiException from Adyen API.
-     */
-    @PostMapping("/initiatePayment")
-    // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity payments(@RequestHeader String host, @RequestBody PaymentsRequest body, HttpServletRequest request) throws IOException, ApiException {
-        // TODO Create a valid payments request
-        var response = "";
-        return ResponseEntity.ok()
-                .body(response);
-    }
-
-    /**
-     * {@code POST  /submitAdditionalDetails} : Make a payment.
-     *
-     * @return the {@link ResponseEntity} with status {@code 200 (Ok)}.
-     * @throws IOException  from Adyen API.
-     * @throws ApiException from Adyen API.
-     */
-    @PostMapping("/submitAdditionalDetails")
-    // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity payments(@RequestBody PaymentsDetailsRequest detailsRequest) throws IOException, ApiException {
-        // TODO Create a valid payments/details request
-        var response = "";
-        return ResponseEntity.ok()
-                .body(response);
-    }
-
-    /**
-     * {@code GET  /handleShopperRedirect} : Handle redirect during payment.
-     *
-     * @return the {@link RedirectView} with status {@code 302}
-     * @throws IOException  from Adyen API.
-     * @throws ApiException from Adyen API.
-     */
-    @GetMapping("/handleShopperRedirect")
-    public RedirectView redirect(@RequestParam(required = false) String payload, @RequestParam(required = false) String redirectResult, @RequestParam String orderRef) throws IOException, ApiException {
-
-        PaymentsDetailsRequest paymentsDetailsRequest = new PaymentsDetailsRequest();
-        // TODO Request to handle paymentDetails and return a redirect view based off the response
-        // To make it easier what needs to happen, we've predefined several views for you.
-        // Get the result code from the response and handle it as follows:
-        //  var redirectURL = "/result/";
-        //        switch (response.getResultCode()) {
-        //            case AUTHORISED:
-        //                redirectURL += "success";
-        //                break;
-        //            case PENDING:
-        //            case RECEIVED:
-        //                redirectURL += "pending";
-        //                break;
-        //            case REFUSED:
-        //                redirectURL += "failed";
-        //                break;
-        //            default:
-        //                redirectURL += "error";
-        //                break;
-        //        }
-        //        return new RedirectView(redirectURL + "?reason=" + response.getResultCode());
-        return new RedirectView("");
-    }
-
-    /**
-     * {@code POST  /donations} : Perform a donation
-     *
-     * @return the {@link ResponseEntity} with status {@code 200 (Ok)} and with body of the response.
-     * @throws IOException  from Adyen API.
-     * @throws ApiException from Adyen API.
-     */
-    @PostMapping("/donations")
-    // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity donations(@RequestBody Amount body, @RequestHeader String host, HttpServletRequest request) throws IOException, ApiException {
-        // TODO Create a valid donations request
-        var response = "";
-        return ResponseEntity.ok()
-                .body(response);
     }
 }

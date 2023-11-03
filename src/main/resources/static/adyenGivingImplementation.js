@@ -1,5 +1,6 @@
 const clientKey = document.getElementById("clientKey").innerHTML;
 
+// Helper function that sends a POST request to your backend
 async function sendPostRequest(url, data) {
   const res = await fetch(url, {
     method: "POST",
@@ -12,9 +13,12 @@ async function sendPostRequest(url, data) {
   return await res.json();
 }
 
+// Handles donation result
 async function handleDonation(amount) {
   try {
     console.log(amount);
+
+    // TODO: call your server "/api/donations end point and handle the response
     const res = await sendPostRequest(`/api/donations`, amount);
 
     switch (res.status) {
@@ -31,28 +35,16 @@ async function handleDonation(amount) {
   }
 }
 
+// Instantiates the configuration & mounts the donation component
 async function startGiving() {
   const checkout= await AdyenCheckout({
     clientKey,
     environment: "test",
   });
 
+  // TODO: Instantiate the donationConfiguration
   const donationConfig = {
-    amounts: {
-      currency: "EUR",
-      values: [300, 500, 1000]
-    },
-    // backgroundUrl: "https://www.adyen.com/dam/jcr:38701562-9572-4aae-acd3-ed53e220d63b/social-responsibility-city-illustration.svg",
-    description: "The Charitable Foundation is a non-profit aiming at showing you the power of Adyen Giving",
-    logoUrl: "https://www.adyen.com/dam/jcr:49277359-f3b5-4ceb-b54c-08189ae2433e/hands-rockon-icon-green.svg",
-    name: "The Charitable Foundation",
-    url: "https://www.adyen.com/social-responsibility/giving",
-    showCancelButton: true,
-    disclaimerMessage: {
-      message: "By donating you agree to the %#terms%#",
-      linkText: "terms and conditions",
-      link: "https://www.adyen.com/legal/terms-and-conditions" // Replace with yours
-    },
+    /* Add configuration here */
     onDonate: (state, component) => {
       if(state.isValid) {
         console.log("Initiating donation");

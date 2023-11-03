@@ -1,38 +1,22 @@
 const clientKey = document.getElementById("clientKey").innerHTML;
-const type = document.getElementById("type").innerHTML;
 
+// Used to finalize a checkout call in case of redirect
+const urlParams = new URLSearchParams(window.location.search);
+// Unique identifier for the payment session
+const sessionId = urlParams.get('sessionId');
+const redirectResult = urlParams.get('redirectResult');
+
+// Typical checkout experience
 async function startCheckout() {
+  // Used in the application to know which type of checkout was chosen
+  const type = document.getElementById("type").innerHTML;
+
   try {
-    const paymentMethodsResponse = await sendPostRequest("/api/getPaymentMethods");
-    const configuration = {
-      paymentMethodsResponse: paymentMethodsResponse,
-      clientKey,
-      locale: "en_US",
-      environment: "test",
-      showPayButton: true,
-      paymentMethodsConfiguration: {
-        ideal: {
-          showImage: true,
-        },
-        card: {
-          hasHolderName: true,
-          holderNameRequired: true,
-          name: "Credit or debit card",
-        }
-      },
-      onSubmit: (state, component) => {
-        if (state.isValid) {
-          handleSubmission(state, component, "/api/initiatePayment");
-        }
-      },
-      onAdditionalDetails: (state, component) => {
-        handleSubmission(state, component, "/api/submitAdditionalDetails");
-      },
-    };
-    // `spring.jackson.default-property-inclusion=non_null` needs to set in
-    // src/main/resources/application.properties to avoid NPE here
-    //TODO : call the server "/api/sessions?type=" + type", and feed the response of the server to the createAdyenCheckout function. You can use the sendPostRequest function help for that.
-    const checkout = await  new AdyenCheckout(configuration);
+    // TODO: call the server "/api/sessions?type=" + type",
+    // and feed the `checkoutSessionResponse` of the server to the createAdyenCheckout function.
+    // You can use the `sendPostRequest` function help for that.
+
+    const checkout = await createAdyenCheckout(checkoutSessionResponse);
     checkout.create(type).mount(document.getElementById("payment"));
   } catch (error) {
     console.error(error);
@@ -40,19 +24,36 @@ async function startCheckout() {
   }
 }
 
-// Event handlers called when the shopper selects the pay button,
-// or when additional information is required to complete the payment
-async function handleSubmission(state, component, url) {
+// Some payment methods use redirects. This is where we finalize the operation
+async function finalizeCheckout() {
   try {
-    const res = await sendPostRequest(url, state.data);
-    handleServerResponse(res, component);
+    const checkout = await createAdyenCheckout({id: sessionId});
+    checkout.submitDetails({details: {redirectResult}});
   } catch (error) {
     console.error(error);
     alert("Error occurred. Look at console for details");
   }
 }
 
-// Calls your server endpoints
+async function createAdyenCheckout(session){
+  return new AdyenCheckout(
+      {
+        // TODO: insert the adyen checkout configuration here. The input session parameter can be fed into the session parameter of the configuration.
+        onPaymentCompleted: (result, component) => {
+          console.info("onPaymentCompleted");
+          console.info(result, component);
+          handleServerResponse(result, component);
+        },
+        onError: (error, component) => {
+          console.error("onError");
+          console.error(error.name, error.message, error.stack, component);
+          handleServerResponse(error, component);
+        },
+      }
+  );
+}
+
+// Helper function that sends a POST request to your backend
 async function sendPostRequest(url, data) {
   const res = await fetch(url, {
     method: "POST",
@@ -65,27 +66,27 @@ async function sendPostRequest(url, data) {
   return await res.json();
 }
 
-// Handles responses sent from your server to the client
-function handleServerResponse(res, component) {
-  if (res.action) {
-    component.handleAction(res.action);
-  } else {
-    switch (res.resultCode) {
-      case "Authorised":
-        window.location.href = "/result/success";
-        break;
-      case "Pending":
-      case "Received":
-        window.location.href = "/result/pending";
-        break;
-      case "Refused":
-        window.location.href = "/result/failed";
-        break;
-      default:
-        window.location.href = "/result/error";
-        break;
-    }
+// Handles the response based on the resultCode.
+function handleServerResponse(res, _component) {
+  switch (res.resultCode) {
+    case "Authorised":
+      window.location.href = "/result/success";
+      break;
+    case "Pending":
+    case "Received":
+      window.location.href = "/result/pending";
+      break;
+    case "Refused":
+      window.location.href = "/result/failed";
+      break;
+    default:
+      window.location.href = "/result/error";
+      break;
   }
 }
 
-startCheckout();
+if (!sessionId) {
+  startCheckout()
+} else {
+  finalizeCheckout();
+}

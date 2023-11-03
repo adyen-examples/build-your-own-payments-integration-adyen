@@ -90,6 +90,7 @@ We will be *intentionally* using an older version of the library and web compone
       * Handle the response by redirecting the user to the correct page
       * Complete the configuration of the `AdyenCheckout` object in the `createAdyenCheckout` function.
       * Note that [if you are selecting a payment method that needs a redirect](https://docs.adyen.com/online-payments/build-your-integration/?platform=Web&integration=Components&version=5.53.2#handle-the-redirect), the `finalizeCheckout` method will be called with a `sessionId` value. You do not need to do anything for this.
+    * Show the amount that the shopper needs to pay on the drop-in.
 4. Test your integration
     * Run `./gradlew bootRun` to start the server, and open `http://localhost:8080/` in your browser
 5. Add a payment method
@@ -104,12 +105,18 @@ We will be *intentionally* using an older version of the library and web compone
 ### Briefing:
 It turns out hard-coding the amount was not the best idea.
 Now, every time a customer **has** to buy a pair of headphones and sunglasses. Not very ideal :), shoppers should be able to add items and the amount needs to update accordingly.
+One option is to use the `/sessions`-endpoint, and create a new sessionId and merchantReference for every change. This is quite on the heavy side.
+An alternative option can be found here: [documentation](https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/).
 
-In this module, we will build an advanced checkout page using the advanced flow.
+In this module, we will build an advanced checkout page using the advanced flow.Hhere are some helpful tips:
 The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
-This means we'll have to change a couple of things on our front- and backend according to: https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/, here are some helpful tips:
+This means we'll have to change a couple of things on our front- and backend.
   * Frontend: We need to override several event handlers and handle the subsequent calls.
+      * Show the amount that the shopper needs to pay on the drop-in.
   * Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
+     * The `initiatePayment` method should have a variable amount that can be changed according to the shopper's cart.
+     * The `getPaymentMethods` and `submitAdditionalDetails` should be implemented in `CheckoutResource.java`.
+     * Tip: use a session cookie to temporarily store the items or an in-memory cache.
   * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`
 
 
@@ -125,16 +132,6 @@ Upgrades should be easy, right...?
 1. Upgrade your Java library to the latest version: https://github.com/Adyen/adyen-java-api-library/releases
 2. Upgrade your Adyen Drop-in/Web Components to the latest version: https://docs.adyen.com/online-payments/release-notes/?integration_type=web
 3. This module is successful when you can ensure your integration still works as-before.
-
-/*--- TODO: Let's decide whether we want to use playwright?
-* Tip: Let's write tests *before doing the upgrade* to make sure that gift cards, donations, payments still work.
-You can use an E2E testing framework like: https://playwright.dev/java/docs/intro
-  * Make an iDeal payment automatically
-  * Make a credit card payment automatically
-  * Make a Klarna payment automatically
-  * Make a donation
-  * Make a gift card payment
----*/
 
 
 ## Module 3 : Adding donations

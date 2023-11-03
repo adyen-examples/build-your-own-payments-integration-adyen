@@ -50,10 +50,10 @@ public class WebhookResource {
             try {
                 if (getHmacValidator().validateHMAC(item, this.applicationProperty.getHmacKey())) {
                     log.info("""
-                            Received webhook with event {} :\s
-                            Merchant Reference: {}
-                            Alias : {}
-                            PSP reference : {}"""
+                                    Received webhook with event {} :\s
+                                    Merchant Reference: {}
+                                    Alias : {}
+                                    PSP reference : {}"""
                             , item.getEventCode(), item.getMerchantReference(), item.getAdditionalData().get("alias"), item.getPspReference());
 
                     // consume the notification/event here
@@ -72,6 +72,37 @@ public class WebhookResource {
             // Unexpected event with no payload: do not send [accepted] response
             log.warn("Empty NotificationItem");
         }
+        return ResponseEntity.ok().body("[accepted]");
+    }
+
+    @PostMapping("/webhooks/giving")
+    public ResponseEntity<String> givingWebhooks(@RequestBody String json) throws IOException {
+        // from JSON string to object
+        var notificationRequest = NotificationRequest.fromJson(json);
+
+        // fetch first (and only) NotificationRequestItem
+        var notificationRequestItem = notificationRequest.getNotificationItems().stream().findFirst();
+
+        if (notificationRequestItem.isPresent()) {
+
+            var item = notificationRequestItem.get();
+
+            log.info("""
+                            Received webhook with event {} :\s
+                            Merchant Account Code: {}
+                            PSP reference : {}
+                            Donation successful : {}
+                            """
+                    , item.getEventCode(), item.getMerchantAccountCode(), item.getPspReference(), item.isSuccess());
+
+            // consume event asynchronously / perform logic here by sending it to a queue / save it in a database
+
+        } else {
+            // Unexpected event with no payload: do not send [accepted] response
+            log.warn("Empty NotificationItem");
+        }
+
+        // Acknowledge event has been consumed
         return ResponseEntity.ok().body("[accepted]");
     }
 

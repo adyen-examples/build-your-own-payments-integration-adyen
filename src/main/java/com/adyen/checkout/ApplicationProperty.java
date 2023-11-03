@@ -21,6 +21,9 @@ public class ApplicationProperty {
     @Value("${ADYEN_HMAC_KEY:#{null}}")
     private String hmacKey;
 
+    @Value("${ADYEN_DONATION_MERCHANT_ACCOUNT:MyCharity_Giving_TEST}")
+    private String donationMerchantAccount;
+
     public int getServerPort() {
         return serverPort;
     }
@@ -29,9 +32,7 @@ public class ApplicationProperty {
         this.serverPort = serverPort;
     }
 
-    public String getApiKey() {
-        return apiKey;
-    }
+    public String getApiKey() { return apiKey; }
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
@@ -44,6 +45,10 @@ public class ApplicationProperty {
     public void setMerchantAccount(String merchantAccount) {
         this.merchantAccount = merchantAccount;
     }
+
+    public String getDonationMerchantAccount() { return donationMerchantAccount; }
+
+    public void setDonationMerchantAccount(String donationMerchantAccount) { this.donationMerchantAccount = donationMerchantAccount; }
 
     public String getClientKey() {
         return clientKey;

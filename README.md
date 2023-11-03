@@ -151,7 +151,7 @@ Time to prepare your backend to perform donations.
 
 1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
   * You'll notice that you have to change your existing backend and frontend flows.
-
+  * You'll also notice that you'll need another environment variable specific to your Adyen donation merchant account, you can add this in your `ApplicationProperty.java`.
 
 2. Prepare your backend to handle the incoming donation webhook.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen.

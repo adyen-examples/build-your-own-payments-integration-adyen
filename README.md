@@ -14,7 +14,7 @@ The list of modules is as such :
 
 * [Module 0 : Building a simple checkout page using sessions](#module-0--building-a-simple-checkout-page)
 * [Module 1 : Building an advanced checkout page using the advanced flow](#module-1--building-an-advanced-checkout-page-using-the-advanced-flow)
-* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2--upgrading-to-the-latest-version-of-the-library-and-adyen-drop-inweb-components)
+* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2--upgrading-to-the-latest-version-of-the-library-and-adyen-dropin)
 * [Module 3 : Adding donations](#module-3--adding-donations)
 * [Module 4 : Adding gift cards](#module-4--adding-gift-cards)
 
@@ -57,7 +57,7 @@ export ADYEN_HMAC_KEY="HMACKEY"
 
 ## Module 0 : Building a simple checkout page
 
-### Briefing:
+**Briefing**
 You're working as a full-stack developer for an E-commerce website that sells headphones and sunglasses in the Netherlands.
 In fact, they sell the best headphones and sunglasses at 50.00 each and you're extremely excited to take on this challenge.
 It's your job to implement the integration using Adyen and accept credit card payments, iDeal & klarna payments.
@@ -100,9 +100,9 @@ We will be *intentionally* using an older version of the library and web compone
     * Complete an iDeal payment
     * Finally, complete a credit-card payment successfully to finish this module.
 
-## Module 1 : Building an advanced checkout page using the advanced flow.
+## Module 1 : Building an advanced checkout page using the advanced flow
 
-### Briefing:
+**Briefing**
 It turns out hard-coding the amount was not the best idea.
 Now, every time a customer **has** to buy a pair of headphones and sunglasses. Not very ideal :), shoppers should be able to add items and the amount needs to update accordingly.
 One option is to use the `/sessions`-endpoint, and create a new sessionId and merchantReference for every change. This is quite on the heavy side.
@@ -120,9 +120,9 @@ This means we'll have to change a couple of things on our front- and backend.
   * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`
 
 
-## Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components
+## Module 2 : Upgrading to the latest version of the library and Adyen Drop-in
 
-### Briefing:
+**Briefing**
 Project #MyStore has been very successful. The company wants to give their shoppers the option to donate, after every successful payment, as part of their on-going charity efforts.
 You're extremely glad that you've just implemented the advanced flow to support donations, see [documentation](https://docs.adyen.com/online-payments/donations/web-component/#before-you-begin).
 However, the current version of the Java library doesn't support donations. Let's upgrade the library and while we're at it, upgrade Adyen Drop-in/Components as well.
@@ -135,6 +135,8 @@ Upgrades should be easy, right...?
 
 
 ## Module 3 : Adding donations
+
+**Briefing**
 It's show-time! The company decides to partner with their favorite charity and allow their customers to donate after every successful purchase!
 Time to prepare your backend to perform donations.
 
@@ -158,7 +160,7 @@ Time to prepare your backend to perform donations.
 
 ## Module 4 : Adding gift cards
 
-### Briefing:
+**Briefing**
 We've noticed that some of our customers would love to give their friends some nice headphones as a gift.
 They will have to order it through the website themselves.
 
@@ -175,7 +177,7 @@ They will have to order it through the website themselves.
 
 4. Perform a successful gift card (partial) payment, can you use a gift card **and** a debit card payment to pay the remaining amount?
 
-** Tip: ** You need to enable the gift cards payment method in the Customer Area.
+**Tip:** You need to enable the gift cards payment method in the Customer Area.
 
 
 ## Contacting us

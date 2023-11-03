@@ -14,7 +14,7 @@ The list of modules is as such :
 
 * [Module 0 : Building a simple checkout page using sessions](#module-0--building-a-simple-checkout-page)
 * [Module 1 : Building an advanced checkout page using the advanced flow](#module-1--building-an-advanced-checkout-page-using-the-advanced-flow)
-* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2--upgrading-to-the-latest-version-of-the-library-and-adyen-dropin)
+* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2--upgrading-to-the-latest-version-of-the-library-and-adyen-drop-in)
 * [Module 3 : Adding donations](#module-3--adding-donations)
 * [Module 4 : Adding gift cards](#module-4--adding-gift-cards)
 

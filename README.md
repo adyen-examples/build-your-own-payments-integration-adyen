@@ -13,8 +13,8 @@ The list of modules is as such :
 
 
 * [Module 0 : Building a simple checkout page using sessions](#module-0--building-a-simple-checkout-page)
-* [Module 1 : Building an advanced checkout page using the advanced flow](#module-1--building-advanced-checkout-page-using-the-advanced-flow)
-* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2--upgrading-to-the-latest)
+* [Module 1 : Building an advanced checkout page using the advanced flow](#module-1--building-an-advanced-checkout-page-using-the-advanced-flow)
+* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2--upgrading-to-the-latest-version-of-the-library-and-adyen-drop-inweb-components)
 * [Module 3 : Adding donations](#module-3--adding-donations)
 * [Module 4 : Adding gift cards](#module-4--adding-gift-cards)
 
@@ -156,7 +156,7 @@ Time to prepare your backend to perform donations.
 **Tip:** You need to enable donations in the Customer Area & an ADP in the Backoffice.
 
 
-## Module 4: Adding gift cards
+## Module 4 : Adding gift cards
 
 ### Briefing:
 We've noticed that some of our customers would love to give their friends some nice headphones as a gift.

@@ -12,11 +12,11 @@ _Note that the workshop is intended to highlight some of the pains of our custom
 The list of modules is as such :
 
 
-* [Module 0 : Building a simple checkout page using sessions](module-0-building-a-simple-checkout-page)
-* [Module 1 : Building an advanced checkout page using the advanced flow.]
-* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components]
-* [Module 3 : Adding donations.]
-* [Module 4 : Adding gift cards.]
+* [Module 0 : Building a simple checkout page using sessions](#module-0-:-building-a-simple-checkout-page)
+* [Module 1 : Building an advanced checkout page using the advanced flow](#module-1-:-building-advanced-checkout-page-using-the-advanced-flow)
+* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in/Web components](#module-2-:-upgrading-to-the-latest)
+* [Module 3 : Adding donations](#module-3-:-adding-donations)
+* [Module 4 : Adding gift cards](#module-4-:-adding-gift-cards)
 
 ### Context of the code repository.
 
@@ -108,7 +108,7 @@ Now, every time a customer **has** to buy a pair of headphones and sunglasses. N
 One option is to use the `/sessions`-endpoint, and create a new sessionId and merchantReference for every change. This is quite on the heavy side.
 An alternative option can be found here: [documentation](https://docs.adyen.com/online-payments/build-your-integration/additional-use-cases/advanced-flow-integration/).
 
-In this module, we will build an advanced checkout page using the advanced flow.Hhere are some helpful tips:
+In this module, we will build an advanced checkout page using the advanced flow. Here are some helpful tips:
 The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
 This means we'll have to change a couple of things on our front- and backend.
   * Frontend: We need to override several event handlers and handle the subsequent calls.

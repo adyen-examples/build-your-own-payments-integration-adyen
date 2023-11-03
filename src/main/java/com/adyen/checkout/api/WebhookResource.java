@@ -1,7 +1,7 @@
 package com.adyen.checkout.api;
 
 import com.adyen.checkout.ApplicationProperty;
-import com.adyen.notification.NotificationHandler;
+import com.adyen.model.notification.NotificationRequest;
 import com.adyen.util.HMACValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +25,6 @@ public class WebhookResource {
 
     private final ApplicationProperty applicationProperty;
 
-    private final NotificationHandler notificationHandler;
-
     @Autowired
     public WebhookResource(ApplicationProperty applicationProperty) {
         this.applicationProperty = applicationProperty;
@@ -35,14 +33,12 @@ public class WebhookResource {
             log.warn("ADYEN_HMAC_KEY is UNDEFINED (Webhook cannot be authenticated)");
             throw new RuntimeException("ADYEN_HMAC_KEY is UNDEFINED");
         }
-
-        notificationHandler = new NotificationHandler();
     }
 
     @PostMapping("/webhooks/notifications")
     public ResponseEntity<String> webhooks(@RequestBody String json) throws IOException {
         // from JSON string to object
-        var notificationRequest = notificationHandler.handleNotificationJson(json);
+        var notificationRequest = NotificationRequest.fromJson(json);
 
         // fetch first (and only) NotificationRequestItem
         var notificationRequestItem = notificationRequest.getNotificationItems().stream().findFirst();

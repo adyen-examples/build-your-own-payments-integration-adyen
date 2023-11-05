@@ -3,10 +3,8 @@ package com.adyen.checkout.api;
 import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.enums.Environment;
-import com.adyen.model.Amount;
-import com.adyen.model.checkout.CreateCheckoutSessionRequest;
-import com.adyen.model.checkout.CreateCheckoutSessionResponse;
-import com.adyen.model.checkout.LineItem;
+import com.adyen.model.checkout.PaymentsDetailsRequest;
+import com.adyen.model.checkout.PaymentsRequest;
 import com.adyen.service.Checkout;
 import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,10 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.HashMap;
 
 /**
  * REST controller for using Adyen checkout API
@@ -46,28 +44,72 @@ public class CheckoutResource {
         this.checkout = new Checkout(client);
     }
 
-    @PostMapping("/sessions")
-    public ResponseEntity<CreateCheckoutSessionResponse> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
-        var orderRef = UUID.randomUUID().toString();
-        var amount = new Amount()
-            .currency("EUR")
-            .value(10000L);
+    @PostMapping("/getPaymentMethods")
+    // TODO : Add the correct return type here for the ResponseEntity
+    public ResponseEntity paymentMethods() throws IOException, ApiException {
+        // TODO Create a valid paymentMethods call
+        var response = "";
+        return ResponseEntity.ok()
+            .body(response);
+    }
 
-        var checkoutSession = new CreateCheckoutSessionRequest();
-        checkoutSession.countryCode("NL");
-        checkoutSession.merchantAccount(this.applicationProperty.getMerchantAccount());
-        checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
-        checkoutSession.setReference(orderRef); // required
-        checkoutSession.setReturnUrl(request.getScheme() + "://" + host + "/redirect?orderRef=" + orderRef);
-        checkoutSession.setAmount(amount);
+    @PostMapping("/initiatePayment")
+    // TODO : Add the correct return type here for the ResponseEntity
+    public ResponseEntity payments(@RequestHeader String host, @RequestBody PaymentsRequest body, HttpServletRequest request) throws IOException, ApiException {
+        // TODO Create a valid payments request
+        var response = "";
+        return ResponseEntity.ok()
+            .body(response);
+    }
 
-        checkoutSession.setLineItems(Arrays.asList(
-            new LineItem().quantity(1L).amountIncludingTax(5000L).description("Sunglasses"),
-            new LineItem().quantity(1L).amountIncludingTax(5000L).description("Headphones"))
-        );
+    @PostMapping("/submitAdditionalDetails")
+    // TODO : Add the correct return type here for the ResponseEntity
+    public ResponseEntity submitAdditionalDetails(@RequestBody PaymentsDetailsRequest detailsRequest) throws IOException, ApiException {
+        // TODO Create a valid payments/details request
+        var response = "";
+        return ResponseEntity.ok()
+            .body(response);
+    }
 
-        log.info("REST request to create Adyen Payment Session {}", checkoutSession);
-        var response = checkout.sessions(checkoutSession);
-        return ResponseEntity.ok().body(response);
+    /**
+     * {@code GET  /handleShopperRedirect} : Handle redirect during payment.
+     *
+     * @return the {@link RedirectView} with status {@code 302}
+     * @throws IOException  from Adyen API.
+     * @throws ApiException from Adyen API.
+     */
+    @GetMapping("/handleShopperRedirect")
+    public RedirectView redirect(@RequestParam(required = false) String payload, @RequestParam(required = false) String redirectResult) throws IOException, ApiException {
+        var detailsRequest = new PaymentsDetailsRequest();
+
+        if (redirectResult != null && !redirectResult.isEmpty()) {
+            detailsRequest.setDetails(new HashMap<String, String>() {
+                { put("redirectResult",  redirectResult); }
+            });
+        } else if (payload != null && !payload.isEmpty()) {
+            detailsRequest.setDetails(new HashMap<String, String>() {
+                { put("payload",  payload); }
+            });
+        }
+
+        log.info("REST request to handle payment redirect {}", detailsRequest);
+        var response = checkout.paymentsDetails(detailsRequest);
+        var redirectURL = "/result/";
+        switch (response.getResultCode()) {
+            case AUTHORISED:
+                redirectURL += "success";
+                break;
+            case PENDING:
+            case RECEIVED:
+                redirectURL += "pending";
+                break;
+            case REFUSED:
+                redirectURL += "failed";
+                break;
+            default:
+                redirectURL += "error";
+                break;
+        }
+        return new RedirectView(redirectURL + "?reason=" + response.getResultCode());
     }
 }

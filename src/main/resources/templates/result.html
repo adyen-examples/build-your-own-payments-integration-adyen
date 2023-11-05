@@ -8,6 +8,7 @@
 <body>
 <div layout:fragment="content" class="status-container">
   <div class="status">
+    <div id="clientKey" class="hidden" th:text="${clientKey}"></div>
     <img th:src="${'/images/' + type + '.svg'}" class="status-image" alt="">
     <img th:if="${type == 'success' || type == 'pending'}" src="/images/thank-you.svg" class="status-image" alt="">
 

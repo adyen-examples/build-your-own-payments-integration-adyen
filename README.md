@@ -50,11 +50,14 @@ export ADYEN_HMAC_KEY="HMACKEY"
 Pick your module to start working :
 
 * [Module 0 : Building a simple checkout page using sessions](MODULE_0.md)
-
+* [Module 1 : Building an advanced checkout page using the advanced flow](MODULE_1.md)
+* [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in](MODULE_2.md)
+* [Module 3 : Adding donations!](MODULE_3.md)
+* [Module 4 : Adding gift cards](MODULE_4.md)
 
 ## Contacting us
 
 If you have any questions, feel free to contact us at devrel@adyen.com.
 
-* [Julien Lengrand-Lambert](https://github.com/jlengrand)
 * [Kwok He Chu](https://github.com/Kwok-he-Chu)
+* [Julien Lengrand-Lambert](https://github.com/jlengrand)

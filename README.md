@@ -27,6 +27,7 @@ Some information on how the project is constructed :
   * The `layout.html` file is the template file that contains the adyen `js` and `css` imports.
   * The `adyenImplementation.js` file from the `static` folder is where the client related logic is located.
 * Some additional information: 
+  * We have decided to manage the results of the operation in the frontend `adyenImplementation.js` file, in the `handleServerResponse` as a switch statement. It could have been done differently but this means you don't have to manage it yourself.
   * The `clientKey` is automatically passed from the backend to the client side via a hidden `clientKey` field for convenience.
   * In order to play around with multiple payment methods, a `type` value is passed from the client to the server, which contains the name of an adyen payment method and that the adyen web components will recognize. You will not need to interact with this but we are mentioning it to avoid any confusion :).
 * To run the project 

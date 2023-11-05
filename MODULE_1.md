@@ -1,5 +1,11 @@
 # Module 1 : Building an advanced checkout page using the advanced flow
 
+* You can keep using your own code to implement this module.
+* A clean starting template is available at all times with the `module-1-start` tag.
+    * `git checkout module-1-start` to get the starting template.
+* A proposed solution is available with the `module-1-end` tag.
+    * `git checkout module-1-end` to get the proposed solution.
+
 ## Briefing
 
 It turns out hard-coding the amount was not the best idea.

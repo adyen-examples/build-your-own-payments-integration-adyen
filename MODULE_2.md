@@ -1,5 +1,11 @@
 # Module 2 : Upgrading to the latest version of the library and Adyen Drop-in
 
+* You can keep using your own code to implement this module.
+* A clean starting template is available at all times with the `module-2-start` tag.
+    * `git checkout module-2-start` to get the starting template.
+* A proposed solution is available with the `module-2-end` tag.
+    * `git checkout module-2-end` to get the proposed solution.
+    * 
 ## Briefing
 
 Project MyStore has been very successful! Your shop is running at full speed and you're selling more and more headphones and sunglasses every day.

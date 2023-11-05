@@ -1,5 +1,11 @@
 # Module 4 : Adding gift cards
 
+* You can keep using your own code to implement this module.
+* A clean starting template is available at all times with the `module-4-start` tag.
+    * `git checkout module-4-start` to get the starting template.
+* A proposed solution is available with the `module-4-end` tag.
+    * `git checkout module-4-end` to get the proposed solution.
+
 ## Briefing
 
 We've noticed that some of our customers would love to give their friends some nice headphones as a gift.

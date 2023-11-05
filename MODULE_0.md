@@ -1,5 +1,11 @@
 # Module 0 : Building a simple checkout page
 
+* You can keep using your own code to implement this module.
+* A clean starting template is available at all times with the `module-0-start` tag.
+  * `git checkout module-0-start` to get the starting template.
+* A proposed solution is available with the `module-0-end` tag.
+  * `git checkout module-0-end` to get the proposed solution.
+
 ## Briefing :
 
 You're working as a full-stack developer for an E-commerce website that sells headphones and sunglasses in the Netherlands.

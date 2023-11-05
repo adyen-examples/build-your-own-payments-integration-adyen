@@ -66,6 +66,15 @@ public class WebhookResource {
         return ResponseEntity.ok().body("[accepted]");
     }
 
+    @PostMapping("/webhooks/giving")
+    public ResponseEntity<String> givingWebhooks(@RequestBody String json) {
+
+        // TODO : Implement the method to process the donations webhook and print useful information in the logs
+
+        // TODO: Acknowledge event has been consumed
+        return ResponseEntity.ok().body("");
+    }
+
     @Bean
     public HMACValidator getHmacValidator() {
         return new HMACValidator();

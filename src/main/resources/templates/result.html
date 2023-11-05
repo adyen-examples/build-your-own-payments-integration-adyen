@@ -12,6 +12,7 @@
     <img th:if="${type == 'success' || type == 'pending'}" src="/images/thank-you.svg" class="status-image" alt="">
 
     <p class="status-message">
+      <span th:if="${type == 'donated' }">Thank you for your donation!</span>
       <span th:if="${type == 'success' }">Your order has been successfully placed.</span>
       <span th:if="${type == 'pending' }">Your order has been received! Payment completion pending.</span>
       <span th:if="${type == 'failed' }">The payment was refused. Please try a different payment method or card.</span>
@@ -21,6 +22,11 @@
       </span>
     </p>
     <a class="button" href="/">Return Home</a>
+
+    <!-- TODO : Add a donation container here that will appear in case someone has successfully processed a payment -->
+
+    <!-- TODO : Add the necessary javascript import to know how to process donations.-->
+
   </div>
 </div>
 </body>

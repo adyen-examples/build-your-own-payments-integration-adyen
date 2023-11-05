@@ -10,3 +10,19 @@ There is a pull request open (and never merged) that merges the module-1 branch 
 
 Overriding a tag is not directly possible. To do it, place yourself on the commit you want to tag, and run the following command:
 `git tag -f module-1-start`
+
+
+The order of branches is as follows :
+
+-> main
+    -> module-0-start-branch (identical to main)
+        -> module-0-end-branch
+            -> module-1-start-branch
+                -> module-1-end-branch
+                    -> module-2-start-branch (identical to module-1-end-branch)
+                        -> module-2-end-branch
+                            -> module-3-start-branch
+                                -> module-3-end-branch
+
+
+And merges should follow that flow!

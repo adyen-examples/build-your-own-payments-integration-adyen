@@ -55,6 +55,18 @@ public class CheckoutController {
         return "preview";
     }
 
+    @GetMapping("/giftcard")
+    public String giftcard(@RequestParam String type, Model model) {
+        model.addAttribute("type", type);
+
+        // Create an empty shopping cart stored in your http cookie session.
+        getCartService().createEmptyShoppingCart();
+        model.addAttribute("cart", getCartService().getShoppingCart());
+        model.addAttribute("totalAmount", getCartService().getTotalAmount());
+
+        return "giftcard";
+    }
+
     @GetMapping("/checkout")
     public String checkout(@RequestParam String type, Model model) {
         model.addAttribute("type", type);

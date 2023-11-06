@@ -48,21 +48,50 @@ public class WebhookResource {
             var item = notificationRequestItem.get();
 
             try {
-                if (getHmacValidator().validateHMAC(item, this.applicationProperty.getHmacKey())) {
-                    log.info("""
-                                    Received webhook with event {} :\s
-                                    Merchant Reference: {}
-                                    Alias : {}
-                                    PSP reference : {}"""
-                            , item.getEventCode(), item.getMerchantReference(), item.getAdditionalData().get("alias"), item.getPspReference());
-
-                    // consume the notification/event here
-
-                } else {
+                if (!getHmacValidator().validateHMAC(item, this.applicationProperty.getHmacKey())) {
                     // invalid HMAC signature: do not send [accepted] response
                     log.warn("Could not validate HMAC signature for incoming webhook message: {}", item);
                     throw new RuntimeException("Invalid HMAC signature");
                 }
+
+                log.info("Received webhook success:{} eventCode:{}", item.isSuccess(), item.getEventCode());
+
+                // consume payload or save webhook in DB or queue, process then asynchronously
+                if (item.isSuccess()) {
+                    if (item.getEventCode().equals("AUTHORISATION")) {
+
+                        log.info("Payment authorized - pspReference:" + item.getPspReference() + " eventCode:" + item.getEventCode());
+
+                    } else if (item.getEventCode().equals("ORDER_OPENED")) {
+
+                        log.info("Order is opened - pspReference:" + item.getPspReference() + " eventCode:" + item.getEventCode());
+                    } else if (item.getEventCode().equals("ORDER_CLOSED")) {
+
+                        log.info("Order is closed - pspReference:" + item.getPspReference() + " eventCode:" + item.getEventCode());
+
+                        // looking for order-n-pspReference
+                        boolean loop = true;
+                        int i = 1;
+                        while (loop) {
+                            if (item.getAdditionalData().containsKey("order-" + i + "-pspReference")) {
+                                String paymentPspReference = item.getAdditionalData().get("order-" + i + "-pspReference");
+                                String paymentAmount = item.getAdditionalData().get("order-" + i + "-paymentAmount");
+                                String paymentMethod = item.getAdditionalData().get("order-" + i + "-paymentMethod");
+                                log.info("Payment #" + i + " pspReference:" + paymentPspReference + " amount:" + paymentAmount +
+                                        " paymentMethod:" + paymentMethod);
+
+                                i++;
+                            } else {
+                                loop = false;
+                            }
+                        }
+
+                    }
+                } else {
+                    // Operation has failed: check the reason field for failure information.
+                    log.info("Event " + item.getEventCode() + " has failed: " + item.getReason());
+                }
+
             } catch (SignatureException e) {
                 // Unexpected error during HMAC validation: do not send [accepted] response
                 log.error("Error while validating HMAC Key", e);
@@ -72,6 +101,8 @@ public class WebhookResource {
             // Unexpected event with no payload: do not send [accepted] response
             log.warn("Empty NotificationItem");
         }
+
+        // Acknowledge event has been consumed
         return ResponseEntity.ok().body("[accepted]");
     }
 

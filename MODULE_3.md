@@ -19,6 +19,7 @@ Let's implement this!
 0. Enable donations in the Customer Area (& an ADP in the Backoffice).
 1. Prepare your backend to handle an [Adyen giving flow](https://docs.adyen.com/online-payments/donations/web-component/)
     * In `CheckoutResource.java`, make sure to set the donationToken as part of the payment request in the `payments` method.
+    * Don't forget to use the donationService to store the donation token for future use.
     * In `DonationResource.java`, implement the `donations` method that will handle the incoming donation request.
 2. Prepare your backend to handle the incoming donation webhook.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen.

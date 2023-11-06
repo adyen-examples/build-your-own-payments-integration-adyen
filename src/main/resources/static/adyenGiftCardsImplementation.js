@@ -11,18 +11,18 @@ async function startCheckout() {
     try {
         const paymentMethodsResponse = await sendPostRequest("/api/getPaymentMethods");
 
-        const checkout = createAdyenCheckout(paymentMethodsResponse);
-        checkout.create(type).mount(document.getElementById("payment"));
+        const checkout = await createAdyenCheckout(paymentMethodsResponse);
+        console.log(checkout);
+        checkout.create(type).mount(document.getElementById("giftcard-container"));
 
         // Mount your supported payment method components (e.g. 'ideal', 'scheme' etc)
-        // These can be found in Views/Home/Giftcardcomponent/Checkout.cshtml
         mountPaymentMethodButton(checkout, 'ideal');
         mountPaymentMethodButton(checkout, 'scheme');
 
         // Mount gift card component
         mountGiftcardComponentButton(checkout);
 
-        // Show the giftcard button
+        // Show the gift card button
         document.getElementById("add-giftcard-button").hidden = false;
 
     } catch (error) {

@@ -58,6 +58,7 @@ public class CheckoutController {
     @GetMapping("/giftcard")
     public String giftcard(@RequestParam String type, Model model) {
         model.addAttribute("type", type);
+        model.addAttribute("clientKey", this.applicationProperty.getClientKey());
 
         // Create an empty shopping cart stored in your http cookie session.
         getCartService().createEmptyShoppingCart();

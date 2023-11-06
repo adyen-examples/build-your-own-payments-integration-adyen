@@ -176,7 +176,7 @@ public class CheckoutResource {
         var brand = body.getPaymentMethod().getCardDetails().getBrand();
 
         // TODO: givex, other giftcard brands
-        if (!brand.equals("genericgiftcard")) {
+        if (!brand.equals("genericgiftcard") && !brand.equals("givex")) {
             if (response.getDonationToken() == null) {
                 log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
             } else {

@@ -5,29 +5,34 @@ const type = document.getElementById("type").innerHTML;
 
 var remainingAmountToPay =  document.getElementById("totalAmount").innerHTML;
 
+var checkout;
 
 // Gift card configuration
 const giftCardConfiguration =  {
     onBalanceCheck: async function (resolve, reject, data){
+        console.log('onBalanceCheck');
         console.log(data);
         var response = await sendPostRequest("/api/balanceCheck", data);
         console.log(response);
         if (response.resultCode == 'NotEnoughBalance') {
             await this.onOrderRequest(resolve, reject, response);
         }
-        else if (response.resultCode == 'Success')
-        {
-
+        else if (response.resultCode == 'Success')  {
+            await handleSubmission({}, data, "/api/initiatePayment");
         }
-        console.log(response);
+        else {
+            throw new Error("error");
+        }
     },
     onOrderRequest: async function (resolve, reject, data) {
+        console.log('onOrderRequest');
         var response = await sendPostRequest("/api/createOrder", data);
         console.log(response);
         handleOnOrderCreated(response);
     },
     onOrderCancel: async function (order) {
-        await sendPostRequest("/api/cancelOrder", order);
+        console.log('onOrderCancel:');
+        var response = await sendPostRequest("/api/cancelOrder", order);
         console.log(response);
     }
 };
@@ -38,7 +43,7 @@ async function startCheckout() {
     try {
         const paymentMethodsResponse = await sendPostRequest("/api/getPaymentMethods");
 
-        const checkout = await createAdyenCheckout(paymentMethodsResponse);
+        checkout = await createAdyenCheckout(paymentMethodsResponse);
         const giftCardComponent = checkout.create(type, giftCardConfiguration);
 
         try {
@@ -223,17 +228,18 @@ async function createAdyenCheckout(paymentMethodsResponse) {
             // You can specify a custom logo for a gift card brand when creating a configuration object
             // See https://docs.adyen.com/payment-methods/gift-cards/web-drop-in#optional-customize-logos
         },
-        onSubmit: (state, component) => {
+        onSubmit: async (state, component) => {
             // Adyen provides a "Pay button", to use the Pay button for each payment method, set `showPayButton` to true
             // The 'Pay button'' triggers this onSubmit() event
             // If you want to use your own button and then trigger the submit flow on your own
             // Set `showPayButton` to false and call the .submit() method from your own button implementation, for example: component.submit()
+            console.log("onSubmit");
             if (state.isValid) {
-                handleSubmission(state, component, "/api/initiatePayment");
+                await handleSubmission(state, component, "/api/initiatePayment");
             }
         },
-        onAdditionalDetails: (state, component) => {
-            handleSubmission(state, component, "/api/submitAdditionalDetails");
+        onAdditionalDetails: async (state, component) => {
+            await handleSubmission(state, component, "/api/submitAdditionalDetails");
         },
         onPaymentCompleted: (result, component) => {
             console.info("onPaymentCompleted");

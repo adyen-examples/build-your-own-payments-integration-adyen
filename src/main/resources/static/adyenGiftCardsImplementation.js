@@ -3,7 +3,34 @@ const clientKey = document.getElementById("clientKey").innerHTML;
 // Used to finalize a checkout call in case of redirect
 const type = document.getElementById("type").innerHTML;
 
-const remainingAmountToPay =  document.getElementById("totalAmount").innerHTML;
+var remainingAmountToPay =  document.getElementById("totalAmount").innerHTML;
+
+
+// Gift card configuration
+const giftCardConfiguration =  {
+    onBalanceCheck: async function (resolve, reject, data){
+        console.log(data);
+        var response = await sendPostRequest("/api/balanceCheck", data);
+        console.log(response);
+        if (response.resultCode == 'NotEnoughBalance') {
+            await this.onOrderRequest(resolve, reject, response);
+        }
+        else if (response.resultCode == 'Success')
+        {
+
+        }
+        console.log(response);
+    },
+    onOrderRequest: async function (resolve, reject, data) {
+        var response = await sendPostRequest("/api/createOrder", data);
+        console.log(response);
+        handleOnOrderCreated(response);
+    },
+    onOrderCancel: async function (order) {
+        await sendPostRequest("/api/cancelOrder", order);
+        console.log(response);
+    }
+};
 
 // Start gift card checkout experience
 async function startCheckout() {
@@ -12,8 +39,13 @@ async function startCheckout() {
         const paymentMethodsResponse = await sendPostRequest("/api/getPaymentMethods");
 
         const checkout = await createAdyenCheckout(paymentMethodsResponse);
-        console.log(checkout);
-        checkout.create(type).mount(document.getElementById("giftcard-container"));
+        const giftCardComponent = checkout.create(type, giftCardConfiguration);
+
+        try {
+            giftCardComponent.mount(document.getElementById("giftcard-container"));
+        } catch(exception) {
+            console.warn("Could not mount the gift card component.")
+        }
 
         // Mount your supported payment method components (e.g. 'ideal', 'scheme' etc)
         mountPaymentMethodButton(checkout, 'ideal');
@@ -37,8 +69,13 @@ function mountGiftcardComponentButton(checkout) {
     document.getElementById("add-giftcard-button")
         .addEventListener('click', async () => {
             // Create the gift card component
-            const giftcardComponent = checkout.create("giftcard");
-            giftcardComponent.mount("#giftcard-container");
+            const giftcardComponent = checkout.create("giftcard", giftCardConfiguration);
+
+            try {
+                giftCardComponent.mount(document.getElementById("giftcard-container"));
+            } catch(exception) {
+                console.warn("Could not mount the gift card component.")
+            }
 
             // Binds event listener to the 'Go back'-button for the gift card component
             bindGoBackButton(giftcardComponent);
@@ -66,7 +103,6 @@ function mountPaymentMethodButton(checkout, paymentMethodType) {
     buttonElement.addEventListener('click', async () => {
         const className = '.' + paymentMethodType + '-container-item';
         try {
-            // Create and mount the paymentMethodType component
             const paymentMethodComponent = checkout.create(paymentMethodType);
             paymentMethodComponent.mount(className);
 
@@ -198,18 +234,6 @@ async function createAdyenCheckout(paymentMethodsResponse) {
         },
         onAdditionalDetails: (state, component) => {
             handleSubmission(state, component, "/api/submitAdditionalDetails");
-        },
-        onOrderCreated: (orderStatus) => {
-            // Called when a partial order is created and the shopper has to select another payment method to finalize the payment
-            // See https://docs.adyen.com/payment-methods/gift-cards/web-component#required-configuration
-            console.info('onOrderCreated')
-            console.info(orderStatus);
-            handleOnOrderCreated(orderStatus);
-        },
-        onRequiringConfirmation: () => {
-            // Called when the gift card balance is enough to pay the full payment amount
-            // The shopper must then confirm that they want to make the payment with the gift card
-            console.info("onRequiringConfirmation");
         },
         onPaymentCompleted: (result, component) => {
             console.info("onPaymentCompleted");

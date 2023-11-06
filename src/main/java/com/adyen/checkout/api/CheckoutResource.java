@@ -2,10 +2,12 @@ package com.adyen.checkout.api;
 import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
+import com.adyen.checkout.models.requests.PaymentMethodBalanceCheckRequest;
 import com.adyen.checkout.services.CartService;
 import com.adyen.checkout.services.DonationService;
 import com.adyen.enums.Environment;
 import com.adyen.model.checkout.*;
+import com.adyen.service.checkout.OrdersApi;
 import com.adyen.service.checkout.PaymentsApi;
 import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +33,8 @@ public class CheckoutResource {
 
     private final PaymentsApi paymentsApi;
 
+    private final OrdersApi ordersApi;
+
     @Autowired
     private CartService cartService;
 
@@ -48,6 +52,55 @@ public class CheckoutResource {
 
         var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
         this.paymentsApi = new PaymentsApi(client);
+        this.ordersApi = new OrdersApi(client);
+    }
+
+
+    @PostMapping("/balanceCheck")
+    public ResponseEntity<BalanceCheckResponse> balanceCheck(@RequestBody PaymentMethodBalanceCheckRequest request) throws IOException, ApiException {
+        var balanceCheckRequest = new BalanceCheckRequest();
+        balanceCheckRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
+
+        var amount = new Amount();
+        amount.setCurrency("EUR");
+        amount.setValue(cartService.getTotalAmount());
+        balanceCheckRequest.setAmount(amount);
+
+        balanceCheckRequest.setPaymentMethod(new HashMap<>() {
+            { put("brand", request.getPaymentMethod().getBrand()); }
+            { put("encryptedCardNumber", request.getPaymentMethod().getEncryptedCardNumber()); }
+            { put("encryptedSecurityCode", request.getPaymentMethod().getEncryptedSecurityCode()); }
+            { put("type", request.getPaymentMethod().getType()); }
+        });
+        var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
+        return ResponseEntity.ok()
+                .body(response);
+    }
+
+    @PostMapping("/createOrder")
+    public ResponseEntity<CreateOrderResponse> createOrder(@RequestBody CreateOrderRequest request) throws IOException, ApiException {
+        var createOrderRequest = new CreateOrderRequest();
+        createOrderRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
+        createOrderRequest.setReference(UUID.randomUUID().toString());
+
+        var amount = new Amount();
+        amount.setCurrency("EUR");
+        amount.setValue(cartService.getTotalAmount());
+
+        createOrderRequest.setAmount(amount);
+        var response = ordersApi.orders(createOrderRequest);
+        return ResponseEntity.ok()
+                .body(response);
+    }
+
+    @PostMapping("/cancelOrder")
+    public ResponseEntity<CancelOrderResponse> cancelOrder(@RequestBody CancelOrderRequest request) throws IOException, ApiException {
+        var cancelOrderRequest = new CancelOrderRequest();
+        cancelOrderRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
+        cancelOrderRequest.setOrder(request.getOrder());
+        var response = ordersApi.cancelOrder(cancelOrderRequest);
+        return ResponseEntity.ok()
+                .body(response);
     }
 
     /**
@@ -83,7 +136,7 @@ public class CheckoutResource {
         var orderRef = UUID.randomUUID().toString();
         var amount = new Amount()
                 .currency("EUR")
-                .value(getCartService().getTotalAmount());
+                .value(cartService.getTotalAmount());
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
@@ -92,7 +145,7 @@ public class CheckoutResource {
 
         paymentRequest.setAmount(amount);
 
-        var items = getCartService().getShoppingCart().getCartItems();
+        var items = cartService.getShoppingCart().getCartItems();
 
         var lineItems = new ArrayList<LineItem>();
         for (CartItemModel item : items) {
@@ -118,10 +171,17 @@ public class CheckoutResource {
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
-        if (response.getDonationToken() == null) {
-            log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
-        } else {
-            donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
+        // No donationToken when you use a single gift card to do a purchase.
+        // We check brand and save accordingly.
+        var brand = body.getPaymentMethod().getCardDetails().getBrand();
+
+        // TODO: givex, other giftcard brands
+        if (!brand.equals("genericgiftcard")) {
+            if (response.getDonationToken() == null) {
+                log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
+            } else {
+                donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
+            }
         }
 
         return ResponseEntity.ok()
@@ -182,22 +242,6 @@ public class CheckoutResource {
                 break;
         }
         return new RedirectView(redirectURL + "?reason=" + response.getResultCode());
-    }
-
-    public CartService getCartService() {
-        return cartService;
-    }
-
-    public void setCartService(CartService cartService) {
-        this.cartService = cartService;
-    }
-
-    public DonationService getDonationService() {
-        return donationService;
-    }
-
-    public void setDonationService(DonationService donationService) {
-        this.donationService = donationService;
     }
 
 }

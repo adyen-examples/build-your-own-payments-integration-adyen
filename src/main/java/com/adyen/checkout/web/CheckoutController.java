@@ -84,6 +84,7 @@ public class CheckoutController {
         if (type.equals("success")) {
             getCartService().clearShoppingCart();
         }
+
         return "result";
     }
 

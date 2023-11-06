@@ -24,29 +24,23 @@
                 <div class="preview-container-left">
                     <div class="order-summary">
                         <ul class="order-summary-list">
-                            <li class="order-overview-list-item">
-                                <p class="order-overview-list-item-title-center">Cart</p>
-                            </li>
-                            <li class="order-summary-list-list-item">
-                                <img src="/images/sunglasses.png" class="order-summary-list-list-item-image" alt="">
-                                <p class="order-summary-list-list-item-title">Sunglasses</p>
-                                <p class="order-summary-list-list-item-price">1x</p>
-                            </li>
-
-                            <li class="order-summary-list-list-item">
-                                <img src="/images/headphones.png" class="order-summary-list-list-item-image" alt="">
-                                <p class="order-summary-list-list-item-title">Headphones</p>
-                                <p class="order-summary-list-list-item-price">1x</p>
-                            </li>
-
-                            <li class="order-summary-list-list-item">
-                                <p class="order-summary-list-list-item-title">Total items:</p>
-                                <p class="order-summary-list-list-item-price">2x</p>
-                            </li>
-                            <li class="order-summary-list-list-item-no-border">
-                                <p class="order-summary-list-list-item-subtitle">Please select your payment method:</p>
+                            <li class="order-summary-list-list-item" th:each="item: ${cart.cartItems}">
+                                <img th:src="'/images/' + ${item.name} + '.png'" class="order-summary-list-list-item-image" alt="">
+                                <p class="order-summary-list-list-item-title" th:text="${item.name}"></p>
+                                <p class="order-summary-list-list-item-price" th:text="${(item.amount / 100d)} + ' ' + ${item.currency}"></p>
                             </li>
                         </ul>
+
+                        <a th:href="@{api/cart/giftcard/add(name='headphones')}">
+                            <p class="button">Add headphones</p>
+                        </a>
+                        <a th:href="@{api/cart/giftcard/add(name='sunglasses')}">
+                            <p class="button">Add sunglasses</p>
+                        </a>
+
+                        <p class="order-summary-list-list-item-no-border">
+                            <p class="order-summary-list-list-item-subtitle">Please select your payment method:</p>
+                        </p>
                     </div>
                     <div class="payment-method-selector">
                         <ul class="payment-method-list">
@@ -85,14 +79,8 @@
                                 <p class="order-overview-list-item-title-center">Overview</p>
                             </li>
                             <li class="order-overview-item">
-                                <p class="order-overview-list-item-total-amount-price">Sunglasses 55.00</p>
-                            </li>
-                            <li class="order-overview-item">
-                                <p class="order-overview-list-item-total-amount-price">Headphones 55.00</p>
-                            </li>
-                            <li class="order-overview-item">
                                 <p class="order-overview-list-item-total-amount">Total amount</p>
-                                <p class="order-overview-list-item-total-amount-price">110.00</p>
+                                <p class="order-overview-list-item-total-amount-price" th:text="${(totalAmount / 100d)}"></p>
                             </li>
                             <li class="order-overview-list-item">
                                 <p class="order-overview-list-item-remaining">Remaining amount to be paid</p>

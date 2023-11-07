@@ -68,10 +68,6 @@ public class CartService {
     }
 
     public long getTotalAmount(){
-        if (orderDataService.hasOrderData()) {
-            return orderDataService.getRemainingAmount();
-        }
-
         long totalAmount = 0;
 
         var items = getShoppingCart().getCartItems();

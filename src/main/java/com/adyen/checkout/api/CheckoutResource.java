@@ -150,14 +150,15 @@ public class CheckoutResource {
     public ResponseEntity<PaymentResponse> payments(@RequestHeader String host, @RequestBody PaymentRequest body, HttpServletRequest request) throws IOException, ApiException {
         var paymentRequest = new PaymentRequest();
 
-        var orderRef = UUID.randomUUID().toString();
+        var merchantReference = UUID.randomUUID().toString();
 
         var amount = new Amount()
                 .currency("EUR")
                 .value(cartService.getTotalAmount());
 
+        // do a balance-check when a gift card is used as payment method to see if it has enough funds
         if (body.getOrder() != null && body.getPaymentMethod().getCardDetails() != null && body.getPaymentMethod().getCardDetails().getType() != null && body.getPaymentMethod().getCardDetails().getType().getValue() == "giftcard"){
-            // Do a balance-check to see if gift card has enough funds.
+
             var balanceCheckRequest = new BalanceCheckRequest();
             balanceCheckRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
 
@@ -173,20 +174,20 @@ public class CheckoutResource {
                 { put("type", body.getPaymentMethod().getCardDetails().getType().getValue()); }
             });
 
-            // Send balance-check request
+            // sends balance-check request
             var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
 
-            // Handle response
+            // handles response
             switch (response.getResultCode()) {
                 case SUCCESS:
                     amount = new Amount()
                             .currency("EUR")
-                            .value(cartService.getTotalAmount()); // Pay the remaining amount
+                            .value(orderDataService.getRemainingAmount()); // pay the remaining amount
                     break;
                 case NOTENOUGHBALANCE:
                     amount = new Amount()
                             .currency("EUR")
-                            .value(response.getBalance().getValue()); // Pay the full amount for gift cards
+                            .value(response.getBalance().getValue()); // pay the remaining (or full) amount on your gift card
                     break;
                 case FAILED:
                 default:
@@ -196,8 +197,8 @@ public class CheckoutResource {
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
-        paymentRequest.setReference(orderRef);
-        paymentRequest.setReturnUrl(request.getScheme() + "://" + host + "/api/handleShopperRedirect?orderRef=" + orderRef);
+        paymentRequest.setReference(merchantReference);
+        paymentRequest.setReturnUrl(request.getScheme() + "://" + host + "/api/handleShopperRedirect?orderRef=" + merchantReference);
 
         paymentRequest.setAmount(amount);
 
@@ -226,7 +227,7 @@ public class CheckoutResource {
         paymentRequest.setShopperIP(request.getRemoteAddr());
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
-        // Used for partial orders
+        // sets the OrderData, PspReference and FirstPspReference of the gift card payment for partial orders
         if (orderDataService.hasOrderData()) {
             var order = new EncryptedOrderData();
             order.setOrderData(orderDataService.getOrderData());
@@ -241,19 +242,18 @@ public class CheckoutResource {
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
-        if (response.getResultCode() == PaymentResponse.ResultCodeEnum.AUTHORISED) {
+        // sets PspReference of the gift card payment for successfully authorised payments
+        if (response.getResultCode() == PaymentResponse.ResultCodeEnum.AUTHORISED && orderDataService.hasOrderData()) {
 
             if (orderDataService.getFirstPaymentPspReference() != null) {
                 orderDataService.setFirstPaymentPspReference(response.getOrder().getPspReference());
             }
 
-            if (orderDataService.hasOrderData()) {
-                var remainingAmount = orderDataService.getRemainingAmount() - amount.getValue();
-                orderDataService.setRemainingAmount(remainingAmount); // Set new remaining amount
-            }
+            // sets new remaining amount
+            orderDataService.setOrderData(response.getOrder().getOrderData(), response.getOrder().getPspReference(), response.getOrder().getRemainingAmount().getValue());
         }
 
-        // donations
+        // sets the donation token
         if (response.getDonationToken() == null) {
             log.warn("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
         } else {

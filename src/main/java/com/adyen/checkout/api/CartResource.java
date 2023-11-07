@@ -33,21 +33,13 @@ public class CartResource {
 
     @GetMapping("/add")
     public RedirectView add(@RequestParam(required = true) String name, @RequestParam(required = true) String type) throws IOException, ApiException {
-        getCartService().addItemToCart(name);
+        cartService.addItemToCart(name);
         return new RedirectView("/preview?type=" + type);
     }
 
     @GetMapping("/giftcard/add")
     public RedirectView add(@RequestParam(required = true) String name) throws IOException, ApiException {
-        getCartService().addItemToCart(name);
+        cartService.addItemToCart(name);
         return new RedirectView("/giftcard?type=giftcard");
-    }
-
-    public CartService getCartService() {
-        return cartService;
-    }
-
-    public void setCartService(CartService cartService) {
-        this.cartService = cartService;
     }
 }

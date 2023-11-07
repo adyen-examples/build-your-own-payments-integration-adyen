@@ -5,6 +5,7 @@ import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.models.requests.PaymentMethodBalanceCheckRequest;
 import com.adyen.checkout.services.CartService;
 import com.adyen.checkout.services.DonationService;
+import com.adyen.checkout.services.OrderDataService;
 import com.adyen.enums.Environment;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.OrdersApi;
@@ -41,6 +42,9 @@ public class CheckoutResource {
     @Autowired
     private DonationService donationService;
 
+    @Autowired
+    private OrderDataService orderDataService;
+
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
         this.applicationProperty = applicationProperty;
@@ -72,7 +76,9 @@ public class CheckoutResource {
             { put("encryptedSecurityCode", request.getPaymentMethod().getEncryptedSecurityCode()); }
             { put("type", request.getPaymentMethod().getType()); }
         });
+
         var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
+
         return ResponseEntity.ok()
                 .body(response);
     }
@@ -86,18 +92,26 @@ public class CheckoutResource {
         var amount = new Amount();
         amount.setCurrency("EUR");
         amount.setValue(cartService.getTotalAmount());
-
         createOrderRequest.setAmount(amount);
+
         var response = ordersApi.orders(createOrderRequest);
+
+        orderDataService.setOrderData(response.getOrderData(), response.getPspReference());
+
         return ResponseEntity.ok()
                 .body(response);
     }
 
     @PostMapping("/cancelOrder")
-    public ResponseEntity<CancelOrderResponse> cancelOrder(@RequestBody CancelOrderRequest request) throws IOException, ApiException {
+    public ResponseEntity<CancelOrderResponse> cancelOrder() throws IOException, ApiException {
         var cancelOrderRequest = new CancelOrderRequest();
         cancelOrderRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
-        cancelOrderRequest.setOrder(request.getOrder());
+
+        var order = new EncryptedOrderData();
+        order.setOrderData(orderDataService.getOrderData());
+        order.setPspReference(orderDataService.getOrderPspReference());
+        cancelOrderRequest.setOrder(order);
+
         var response = ordersApi.cancelOrder(cancelOrderRequest);
         return ResponseEntity.ok()
                 .body(response);
@@ -168,20 +182,22 @@ public class CheckoutResource {
         paymentRequest.setShopperIP(request.getRemoteAddr());
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
+        // Used for partial orders
+        if (orderDataService.getOrderData() != null && orderDataService.getOrderData() != null) {
+            var order = new EncryptedOrderData();
+            order.setOrderData(orderDataService.getOrderData());
+            order.setPspReference(orderDataService.getOrderPspReference());
+            paymentRequest.setOrder(order);
+            paymentRequest.setOrderReference(orderDataService.getOrderPspReference());
+        }
+
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
-        // No donationToken when you use a single gift card to do a purchase.
-        // We check brand and save accordingly.
-        var brand = body.getPaymentMethod().getCardDetails().getBrand();
-
-        // TODO: givex, other giftcard brands
-        if (!brand.equals("genericgiftcard") && !brand.equals("givex")) {
-            if (response.getDonationToken() == null) {
-                log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
-            } else {
-                donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
-            }
+        if (response.getDonationToken() == null) {
+            log.warn("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
+        } else {
+            donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
         }
 
         return ResponseEntity.ok()

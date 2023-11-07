@@ -3,6 +3,7 @@ package com.adyen.checkout.web;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.services.CartService;
+import com.adyen.checkout.services.OrderDataService;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -29,6 +30,9 @@ public class CheckoutController {
     private CartService cartService;
 
     @Autowired
+    private OrderDataService orderDataService;
+
+    @Autowired
     public CheckoutController(ApplicationProperty applicationProperty) {
         this.applicationProperty = applicationProperty;
 
@@ -48,9 +52,9 @@ public class CheckoutController {
         model.addAttribute("type", type);
 
         // Create an empty shopping cart stored in your http cookie session.
-        getCartService().createEmptyShoppingCart();
-        model.addAttribute("cart", getCartService().getShoppingCart());
-        model.addAttribute("totalAmount", getCartService().getTotalAmount());
+        cartService.createEmptyShoppingCart();
+        model.addAttribute("cart", cartService.getShoppingCart());
+        model.addAttribute("totalAmount", cartService.getTotalAmount());
 
         return "preview";
     }
@@ -61,9 +65,9 @@ public class CheckoutController {
         model.addAttribute("clientKey", this.applicationProperty.getClientKey());
 
         // Create an empty shopping cart stored in your http cookie session.
-        getCartService().createEmptyShoppingCart();
-        model.addAttribute("cart", getCartService().getShoppingCart());
-        model.addAttribute("totalAmount", getCartService().getTotalAmount());
+        cartService.createEmptyShoppingCart();
+        model.addAttribute("cart", cartService.getShoppingCart());
+        model.addAttribute("totalAmount", cartService.getTotalAmount());
 
         return "giftcard";
     }
@@ -72,7 +76,7 @@ public class CheckoutController {
     public String checkout(@RequestParam String type, Model model) {
         model.addAttribute("type", type);
         model.addAttribute("clientKey", this.applicationProperty.getClientKey());
-        model.addAttribute("totalAmount", getCartService().getTotalAmount());
+        model.addAttribute("totalAmount", cartService.getTotalAmount());
         return "checkout";
     }
 
@@ -82,7 +86,8 @@ public class CheckoutController {
         model.addAttribute("clientKey", this.applicationProperty.getClientKey());
 
         if (type.equals("success")) {
-            getCartService().clearShoppingCart();
+            cartService.clearShoppingCart();
+            orderDataService.clearOrderData();
         }
 
         return "result";
@@ -92,13 +97,5 @@ public class CheckoutController {
     public String redirect(Model model) {
         model.addAttribute("clientKey", this.applicationProperty.getClientKey());
         return "redirect";
-    }
-
-    public CartService getCartService() {
-        return cartService;
-    }
-
-    public void setCartService(CartService cartService) {
-        this.cartService = cartService;
     }
 }

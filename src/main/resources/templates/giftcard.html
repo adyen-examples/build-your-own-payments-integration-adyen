@@ -15,10 +15,7 @@
     <main class="preview-page">
         <section class="cart">
             <h2>Gift cards checkout</h2>
-
-            <div class="container">
-                <p>Gift card test number: 6036280000000000000</p>
-            </div>
+            <p>Gift card test number: 7777182708544835</p>
 
             <div class="preview-container">
                 <div class="preview-container-left">
@@ -39,7 +36,7 @@
                         </a>
 
                         <p class="order-summary-list-list-item-no-border">
-                            <p class="order-summary-list-list-item-subtitle">Please select your payment method:</p>
+                            <p class="order-summary-list-list-item-subtitle">Select 'Redeem Gift Card' and complete your payment with another payment method:</p>
                         </p>
                     </div>
                     <div class="payment-method-selector">
@@ -47,26 +44,19 @@
                             <!-- Gift card button -->
                             <li class="payment-method-list-item">
                                 <button type="button" id="add-giftcard-button" class="add-giftcard-button payment-method-selector-button">Redeem Gift Card</button>
-
-                                <!-- See adyenGiftcardImplementation.js > function: `mountGiftcardComponentButton(..)` -->
                                 <p id="giftcard-container" class="payment" hidden></p>
                             </li>
 
-                            <!-- Add your payment methods here -->
+                            <!-- Scheme component (cards) -->
                             <li class="scheme-container payment-method-list-item">
                                 <button type="button" class="scheme-button-selector payment-method-selector-button" hidden>Credit or debit card</button>
                                 <p class="scheme-container-item"></p>
                             </li>
 
+                            <!-- iDeal component -->
                             <li class="ideal-container payment-method-list-item">
                                 <button type="button" class="ideal-button-selector payment-method-selector-button" hidden>iDEAL</button>
-
-                                <!-- See adyenGiftcardImplementation.js > function: `mountPaymentMethodButton(..)` -->
                                 <p class="ideal-container-item"></p>
-                            </li>
-
-                            <li class="go-back-container">
-                                <button type="button" id="go-back-button" class="go-back-button" hidden>Go back</button>
                             </li>
                         </ul>
                     </div>
@@ -83,8 +73,8 @@
                                 <p class="order-overview-list-item-total-amount-price" th:text="${(totalAmount / 100d)}"></p>
                             </li>
                             <li class="order-overview-list-item">
-                                <p class="order-overview-list-item-remaining">Remaining amount to be paid</p>
-                                <p class="order-overview-list-item-remaining-price" id="remaining-due-amount">110.00</p>
+                                <p class="order-overview-list-item-remaining">Remaining amount to be paid:</p>
+                                <p class="order-overview-list-item-remaining-price" id="remaining-due-amount" th:text="${(totalAmount / 100d)}"></p>
                             </li>
                             <!-- See adyenGiftcardImplementation.js > function: `showGiftcardAppliedMessage(..)` -->
                             <!-- We insert <div class='order-overview-list-item-giftcard-balance'></div> elements here to show 'Gift card applied' message(s)  -->

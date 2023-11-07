@@ -7,9 +7,23 @@ var remainingAmountToPay = document.getElementById("totalAmount").innerHTML;
 
 var checkout;
 
+// Calls your server endpoints
+async function sendPostRequest(url, data) {
+    const res = await fetch(url, {
+        method: "POST",
+        body: data ? JSON.stringify(data) : "",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    return await res.json();
+}
+
 // Gift card configuration
 const giftCardConfiguration =  {
     onBalanceCheck: async function (resolve, reject, data) {
+        console.info(data);
         console.log('onBalanceCheck');
 
         const balanceCheckResponse = await sendPostRequest("/api/balanceCheck", data);
@@ -18,22 +32,25 @@ const giftCardConfiguration =  {
         resolve(balanceCheckResponse);
     },
     onOrderRequest: async function (resolve, reject, data) {
+        console.info(data);
         console.log('onOrderRequest');
 
-        const createOrderResponse = await sendPostRequest("/api/createOrder", data);
+        const createOrderResponse = await sendPostRequest("/api/createOrder");
         console.info(createOrderResponse);
 
         resolve(createOrderResponse);
     },
     onOrderCancel: async function (order) {
+        console.info(order);
         console.log('onOrderCancel');
+
         const orderCancelResponse = await sendPostRequest("/api/cancelOrder", order);
         console.info(orderCancelResponse);
 
         checkout.update({
             paymentMethodsResponse: await sendPostRequest("/api/getPaymentMethods"),
             order: null,
-            amount: {currency: "EUR", value: 0}
+            amount: { currency: "EUR", value: 0 }
         });
     }
 };
@@ -69,16 +86,12 @@ async function createAdyenCheckout(paymentMethodsResponse) {
             // If you want to use your own button and then trigger the submit flow on your own
             // Set `showPayButton` to false and call the .submit() method from your own button implementation, for example: component.submit()
             console.log("onSubmit");
-            console.log(state);
             if (!state.isValid) {
                 throw new Error("State is not valid");
             }
 
             var response = await sendPostRequest("/api/initiatePayment", state.data);
-
             console.info(response);
-            console.info(response.order);
-            console.info(response.order?.remainingAmount?.value);
 
             // Handle actions
             if (response.action) {
@@ -146,10 +159,6 @@ async function createAdyenCheckout(paymentMethodsResponse) {
     });
 }
 
-var giftCardComponent;
-var idealComponent;
-var schemeComponent;
-
 // Start gift card checkout experience
 async function startCheckout() {
     console.info('Start checkout...');
@@ -165,15 +174,15 @@ async function startCheckout() {
         }
 
         // Gift card component
-        giftCardComponent = checkout.create('giftcard', giftCardConfiguration).mount(document.getElementById("giftcard-container-item"));
+        const giftCardComponent = checkout.create('giftcard', giftCardConfiguration).mount(document.getElementById("giftcard-container-item"));
         const giftCardButton = document.querySelector('.giftcard-button-selector')
 
         // iDeal component
-        idealComponent = checkout.create('ideal', giftCardConfiguration).mount(document.getElementById("ideal-container-item"));
+        const idealComponent = checkout.create('ideal', giftCardConfiguration).mount(document.getElementById("ideal-container-item"));
         const idealButton = document.querySelector('.ideal-button-selector');
 
         // Scheme component
-        schemeComponent = checkout.create('scheme', giftCardConfiguration).mount(document.getElementById("scheme-container-item"));
+        const schemeComponent = checkout.create('scheme', giftCardConfiguration).mount(document.getElementById("scheme-container-item"));
         const schemeButton = document.querySelector('.scheme-button-selector');
 
         /// Bind all buttons
@@ -260,19 +269,6 @@ async function handleSubmission(state, component, url) {
         console.error(error);
         alert("Error occurred. Look at console for details");
     }
-}
-
-// Calls your server endpoints
-async function sendPostRequest(url, data) {
-    const res = await fetch(url, {
-        method: "POST",
-        body: data ? JSON.stringify(data) : "",
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
-
-    return await res.json();
 }
 
 // Handle server response

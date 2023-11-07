@@ -14,7 +14,7 @@ public class CartService {
     protected HttpSession session;
 
     @Autowired
-    private OrderDataService orderDataService;
+    private OrderService orderDataService;
 
     private final static String SHOPPING_CART = "ShoppingCart";
 

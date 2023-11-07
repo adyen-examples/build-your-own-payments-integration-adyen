@@ -2,10 +2,9 @@ package com.adyen.checkout.api;
 import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
-import com.adyen.checkout.models.requests.PaymentMethodBalanceCheckRequest;
 import com.adyen.checkout.services.CartService;
 import com.adyen.checkout.services.DonationService;
-import com.adyen.checkout.services.OrderDataService;
+import com.adyen.checkout.services.OrderService;
 import com.adyen.enums.Environment;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.OrdersApi;
@@ -43,7 +42,7 @@ public class CheckoutResource {
     private DonationService donationService;
 
     @Autowired
-    private OrderDataService orderDataService;
+    private OrderService orderDataService;
 
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
@@ -57,67 +56,6 @@ public class CheckoutResource {
         var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
         this.paymentsApi = new PaymentsApi(client);
         this.ordersApi = new OrdersApi(client);
-    }
-
-
-    @PostMapping("/balanceCheck")
-    public ResponseEntity<BalanceCheckResponse> balanceCheck(@RequestBody PaymentMethodBalanceCheckRequest request) throws IOException, ApiException {
-        var balanceCheckRequest = new BalanceCheckRequest();
-        balanceCheckRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
-
-        var amount = new Amount();
-        amount.setCurrency("EUR");
-        amount.setValue(cartService.getTotalAmount());
-        balanceCheckRequest.setAmount(amount);
-
-        balanceCheckRequest.setPaymentMethod(new HashMap<>() {
-            { put("brand", request.getPaymentMethod().getBrand()); }
-            { put("encryptedCardNumber", request.getPaymentMethod().getEncryptedCardNumber()); }
-            { put("encryptedSecurityCode", request.getPaymentMethod().getEncryptedSecurityCode()); }
-            { put("type", request.getPaymentMethod().getType()); }
-        });
-
-        var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
-
-        return ResponseEntity.ok()
-                .body(response);
-    }
-
-    @PostMapping("/createOrder")
-    public ResponseEntity<CreateOrderResponse> createOrder(@RequestBody CreateOrderRequest request) throws IOException, ApiException {
-        var createOrderRequest = new CreateOrderRequest();
-        createOrderRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
-        createOrderRequest.setReference(UUID.randomUUID().toString());
-
-        var amount = new Amount();
-        amount.setCurrency("EUR");
-        amount.setValue(cartService.getTotalAmount());
-        createOrderRequest.setAmount(amount);
-
-        var response = ordersApi.orders(createOrderRequest);
-
-        orderDataService.setOrderData(response.getOrderData(), response.getPspReference(), response.getRemainingAmount().getValue());
-
-        return ResponseEntity.ok()
-                .body(response);
-    }
-
-    @PostMapping("/cancelOrder")
-    public ResponseEntity<CancelOrderResponse> cancelOrder() throws IOException, ApiException {
-        var cancelOrderRequest = new CancelOrderRequest();
-        cancelOrderRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
-
-        var order = new EncryptedOrderData();
-        order.setOrderData(orderDataService.getOrderData());
-        order.setPspReference(orderDataService.getOrderPspReference());
-        cancelOrderRequest.setOrder(order);
-
-        var response = ordersApi.cancelOrder(cancelOrderRequest);
-
-        orderDataService.clearOrderData();
-
-        return ResponseEntity.ok()
-                .body(response);
     }
 
     /**
@@ -157,7 +95,10 @@ public class CheckoutResource {
                 .value(cartService.getTotalAmount());
 
         // do a balance-check when a gift card is used as payment method to see if it has enough funds
-        if (body.getOrder() != null && body.getPaymentMethod().getCardDetails() != null && body.getPaymentMethod().getCardDetails().getType() != null && body.getPaymentMethod().getCardDetails().getType().getValue() == "giftcard"){
+        if (body.getOrder() != null &&
+            body.getPaymentMethod().getCardDetails() != null &&
+            body.getPaymentMethod().getCardDetails().getType() != null &&
+            body.getPaymentMethod().getCardDetails().getType().getValue() == "giftcard"){
 
             var balanceCheckRequest = new BalanceCheckRequest();
             balanceCheckRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
@@ -228,29 +169,21 @@ public class CheckoutResource {
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
         // sets the OrderData, PspReference and FirstPspReference of the gift card payment for partial orders
-        if (orderDataService.hasOrderData()) {
-            var order = new EncryptedOrderData();
-            order.setOrderData(orderDataService.getOrderData());
-            order.setPspReference(orderDataService.getOrderPspReference());
-
+        if (body.getOrder() != null) {
+            var order = new EncryptedOrderData()
+                    .orderData(body.getOrder().getOrderData())
+                    .pspReference(body.getOrder().getPspReference());
             paymentRequest.setOrder(order);
-            if (orderDataService.getFirstPaymentPspReference() != null) {
-                paymentRequest.setOrderReference(orderDataService.getFirstPaymentPspReference());
-            }
+
+            paymentRequest.setOrderReference(body.getOrderReference());
         }
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
-        // sets PspReference of the gift card payment for successfully authorised payments
-        if (response.getResultCode() == PaymentResponse.ResultCodeEnum.AUTHORISED && orderDataService.hasOrderData()) {
-
-            if (orderDataService.getFirstPaymentPspReference() != null) {
-                orderDataService.setFirstPaymentPspReference(response.getOrder().getPspReference());
-            }
-
-            // sets new remaining amount
-            orderDataService.setOrderData(response.getOrder().getOrderData(), response.getOrder().getPspReference(), response.getOrder().getRemainingAmount().getValue());
+        // sets new remaining amount
+        if (response.getOrder() != null && response.getResultCode() == PaymentResponse.ResultCodeEnum.AUTHORISED) {
+            orderDataService.setRemainingAmount(response.getOrder().getRemainingAmount().getValue());
         }
 
         // sets the donation token

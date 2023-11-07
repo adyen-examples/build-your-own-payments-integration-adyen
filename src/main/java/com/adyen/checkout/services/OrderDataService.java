@@ -13,10 +13,16 @@ public class OrderDataService {
     private final static String ORDER_DATA = "OrderData";
     private final static String ORDER_PSP_REFERENCE = "OrderPspReference";
     private final static String FIRST_PAYMENT_PSP_REFERENCE = "FirstPaymentPspReference";
+    private final static String REMAINING_AMOUNT = "RemainingAmount";
 
-    public void setOrderData(String orderData, String pspReference) {
+    public boolean hasOrderData() {
+        return session.getAttribute(ORDER_DATA) != null && session.getAttribute(ORDER_PSP_REFERENCE) != null;
+    }
+
+    public void setOrderData(String orderData, String pspReference, long remainingAmount) {
         session.setAttribute(ORDER_DATA, orderData);
         session.setAttribute(ORDER_PSP_REFERENCE, pspReference);
+        session.setAttribute(REMAINING_AMOUNT, remainingAmount);
     }
 
     public String getOrderData() {
@@ -35,9 +41,18 @@ public class OrderDataService {
         return (String) session.getAttribute(FIRST_PAYMENT_PSP_REFERENCE);
     }
 
+    public long getRemainingAmount() {
+        return (long) session.getAttribute(REMAINING_AMOUNT);
+    }
+
+    public void setRemainingAmount(long remainingAmount) {
+        session.setAttribute(REMAINING_AMOUNT, remainingAmount);
+    }
+
     public void clearOrderData() {
         session.removeAttribute(ORDER_DATA);
         session.removeAttribute(ORDER_PSP_REFERENCE);
         session.removeAttribute(FIRST_PAYMENT_PSP_REFERENCE);
+        session.removeAttribute(REMAINING_AMOUNT);
     }
 }

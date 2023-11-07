@@ -13,6 +13,9 @@ public class CartService {
     @Autowired
     protected HttpSession session;
 
+    @Autowired
+    private OrderDataService orderDataService;
+
     private final static String SHOPPING_CART = "ShoppingCart";
 
     private HashMap<String, InventoryModel> inventory;
@@ -65,6 +68,10 @@ public class CartService {
     }
 
     public long getTotalAmount(){
+        if (orderDataService.hasOrderData()) {
+            return orderDataService.getRemainingAmount();
+        }
+
         long totalAmount = 0;
 
         var items = getShoppingCart().getCartItems();

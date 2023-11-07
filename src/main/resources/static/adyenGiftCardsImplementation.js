@@ -9,45 +9,46 @@ var checkout;
 
 // Gift card configuration
 const giftCardConfiguration =  {
-    onBalanceCheck: async function (resolve, reject, data){
+    onBalanceCheck: async function (resolve, reject, data) {
         console.log('onBalanceCheck');
 
         const balanceCheckResponse = await sendPostRequest("/api/balanceCheck", data);
         console.info(balanceCheckResponse);
-        console.info(balanceCheckResponse.balance.value);
 
-        if (balanceCheckResponse.resultCode == "Success")  {
-            const response = await sendPostRequest("api/initiatePayment", data);
-            handleServerResponse(response);
-        }
-        else if (balanceCheckResponse.resultCode == "NotEnoughBalance") {
-            await this.onOrderRequest(resolve, reject, balanceCheckResponse);
-        }
-        else {
-            throw new Error("error handling balanceCheckResponse.");
-        }
+        resolve(balanceCheckResponse);
     },
     onOrderRequest: async function (resolve, reject, data) {
         console.log('onOrderRequest');
+
         const createOrderResponse = await sendPostRequest("/api/createOrder", data);
         console.info(createOrderResponse);
-        await handleOnOrderCreated(createOrderResponse);
+
+        resolve(createOrderResponse);
     },
     onOrderCancel: async function (order) {
         console.log('onOrderCancel');
-
-        const orderCancelResponse = await sendPostRequest("/api/cancelOrder");
+        const orderCancelResponse = await sendPostRequest("/api/cancelOrder", order);
         console.info(orderCancelResponse);
-        checkout.update(order);
+
+        checkout.update({
+            paymentMethodsResponse: await sendPostRequest("/api/getPaymentMethods"),
+            order: null,
+            amount: {currency: "EUR", value: 0}
+        });
     }
 };
 
 // Create Adyen Checkout configuration
 async function createAdyenCheckout(paymentMethodsResponse) {
     return new AdyenCheckout({
+        amount: {
+            currency: "EUR",
+            value: remainingAmountToPay,
+        },
         paymentMethodsResponse: paymentMethodsResponse,
         clientKey: clientKey,
         locale: "en_US",
+        countryCode: "NL",
         environment: "test",
         showPayButton: true,
         paymentMethodsConfiguration: {
@@ -68,10 +69,65 @@ async function createAdyenCheckout(paymentMethodsResponse) {
             // If you want to use your own button and then trigger the submit flow on your own
             // Set `showPayButton` to false and call the .submit() method from your own button implementation, for example: component.submit()
             console.log("onSubmit");
-            if (state.isValid) {
-                console.log(state.data);
+            console.log(state);
+            if (!state.isValid) {
+                throw new Error("State is not valid");
+            }
 
-                await handleSubmission(state, component, "/api/initiatePayment");
+            var response = await sendPostRequest("/api/initiatePayment", state.data);
+
+            console.info(response);
+            console.info(response.order);
+            console.info(response.order?.remainingAmount?.value);
+
+            // Handle actions
+            if (response.action) {
+                component.handleAction(response.action);
+            } else if (response.order && response.order?.remainingAmount?.value > 0) {
+                const order = {
+                    orderData: response.order.orderData,
+                    pspReference: response.order.pspReference
+                };
+
+                const subtractedGiftCardBalance = remainingAmountToPay - response.order.remainingAmount?.value;
+
+                remainingAmountToPay = response.order.remainingAmount?.value;
+
+                const remainingAmountElement = document.getElementById('remaining-due-amount');
+                remainingAmountElement.textContent = (remainingAmountToPay / 100).toFixed(2);
+
+                // Show the subtracted balance of the gift card to the shopper if there are any changes
+                showGiftcardAppliedMessage(subtractedGiftCardBalance);
+
+                // Show all payment method buttons
+                showAllPaymentMethodButtons();
+
+                // Hide the mounted components
+                document.getElementById("giftcard-container-item").hidden = true;
+                document.getElementById("ideal-container-item").hidden = true;
+                document.getElementById("scheme-container-item").hidden = true;
+
+                checkout.update({
+                    paymentMethodsResponse: paymentMethodsResponse,
+                    order,
+                    amount: response.order.remainingAmount
+                });
+            } else {
+                switch (response.resultCode) {
+                    case "Authorised":
+                        window.location.href = "/result/success";
+                        break;
+                    case "Pending":
+                    case "Received":
+                        window.location.href = "/result/pending";
+                        break;
+                    case "Refused":
+                        window.location.href = "/result/failed";
+                        break;
+                    default:
+                        window.location.href = "/result/error";
+                        break;
+                }
             }
         },
         onAdditionalDetails: async (state, component) => {
@@ -91,6 +147,8 @@ async function createAdyenCheckout(paymentMethodsResponse) {
 }
 
 var giftCardComponent;
+var idealComponent;
+var schemeComponent;
 
 // Start gift card checkout experience
 async function startCheckout() {
@@ -102,74 +160,57 @@ async function startCheckout() {
             if (checkout == null) {
                 checkout = await createAdyenCheckout(paymentMethodsResponse);
             }
-            giftCardComponent = checkout.create(type, giftCardConfiguration);
-            giftCardComponent.mount(document.getElementById("giftcard-container"));
         } catch(exception) {
             console.warn("Could not mount the gift card component.")
         }
 
-        // Mount your supported payment method components (e.g. 'ideal', 'scheme' etc)
-        mountPaymentMethodButton('ideal');
-        mountPaymentMethodButton('scheme');
+        // Gift card component
+        giftCardComponent = checkout.create('giftcard', giftCardConfiguration).mount(document.getElementById("giftcard-container-item"));
+        const giftCardButton = document.querySelector('.giftcard-button-selector')
 
-        hideAllPaymentMethodButtons();
+        // iDeal component
+        idealComponent = checkout.create('ideal', giftCardConfiguration).mount(document.getElementById("ideal-container-item"));
+        const idealButton = document.querySelector('.ideal-button-selector');
 
-        // Mount gift card component
-        mountGiftcardComponentButton();
+        // Scheme component
+        schemeComponent = checkout.create('scheme', giftCardConfiguration).mount(document.getElementById("scheme-container-item"));
+        const schemeButton = document.querySelector('.scheme-button-selector');
 
-        // Show the gift card button
-        document.getElementById("add-giftcard-button").hidden = false;
+        /// Bind all buttons
+        giftCardButton.addEventListener('click', () => {
+            if (remainingAmountToPay == 0) {
+                alert("Enter some items in your shopping cart");
+                return;
+            }
+
+            // No longer allow the shopper to change the items.
+            document.getElementById("add-headphones-button").hidden = true;
+            document.getElementById("add-sunglasses-button").hidden = true;
+
+            hideAllPaymentMethodButtons();
+            document.getElementById("giftcard-container-item").hidden = false;
+            document.getElementById("ideal-container-item").hidden = true;
+            document.getElementById("scheme-container-item").hidden = true;
+        });
+
+        schemeButton.addEventListener('click', () => {
+            hideAllPaymentMethodButtons();
+            document.getElementById("giftcard-container-item").hidden = true;
+            document.getElementById("ideal-container-item").hidden = true;
+            document.getElementById("scheme-container-item").hidden = false;
+        });
+
+        idealButton.addEventListener('click', () => {
+            hideAllPaymentMethodButtons();
+            document.getElementById("giftcard-container-item").hidden = true;
+            document.getElementById("ideal-container-item").hidden = false;
+            document.getElementById("scheme-container-item").hidden = true;
+        });
 
     } catch (error) {
         console.error(error);
         alert("Error occurred. Look at console for details");
     }
-}
-
-// Add event listener that mounts gift card component when clicked
-function mountGiftcardComponentButton() {
-    // Adds gift card container and the eventlistener
-    document.getElementById("add-giftcard-button")
-        .addEventListener('click', async () => {
-            if (remainingAmountToPay == 0) {
-                console.warn('No items in cart');
-                alert('No items in cart. Please add some headphones/sunglasses.');
-                return;
-            }
-
-            try {
-                giftCardComponent.mount(document.getElementById("giftcard-container"));
-            } catch(exception) {
-                console.warn("Could not mount the gift card component.")
-            }
-
-            // Hides all payment method buttons
-            hideAllPaymentMethodButtons();
-
-            // Show gift card component
-            document.getElementById("giftcard-container").hidden = false;
-
-            // Hide gift card button
-            document.getElementById("add-giftcard-button").hidden = true;
-        });
-}
-
-// Add event listener to the buttons and mount the respective component for the specified paymentMethodType when clicked
-function mountPaymentMethodButton(paymentMethodType) {
-    // Find <button> for the respective payment method
-    let buttonElement = document.querySelector('.' + paymentMethodType + '-button-selector');
-
-    // Add event listener to <button>
-    buttonElement.addEventListener('click', async () => {
-        const className = '.' + paymentMethodType + '-container-item';
-        try {
-            const paymentMethodComponent = checkout.create(paymentMethodType, giftCardConfiguration);
-            paymentMethodComponent.mount(className);
-
-        } catch (error) {
-            console.warn('Unable to mount: "' + paymentMethodType + '" to the `<div class={paymentMethodType}-container-item></div>`.');
-        }
-    });
 }
 
 // Show all payment method buttons
@@ -209,19 +250,6 @@ function showGiftcardAppliedMessage(giftcardSubtractedBalance) {
     overviewList.appendChild(liElement);
 }
 
-// Shows an error message when gift card is invalid
-function showGiftCardErrorMessage(errorMessage) {
-    let giftcardErrorMessageComponent = document.querySelector('#giftcard-error-message');
-    // Show the error message
-    giftcardErrorMessageComponent.textContent = errorMessage;
-}
-
-// Clears any (previous) error messages
-function clearGiftCardErrorMessages() {
-    let giftcardErrorMessageComponent = document.querySelector('#giftcard-error-message');
-    giftcardErrorMessageComponent.textContent = '';
-}
-
 // Event handlers called when the shopper selects the pay button,
 // or when additional information is required to complete the payment
 async function handleSubmission(state, component, url) {
@@ -233,56 +261,6 @@ async function handleSubmission(state, component, url) {
         alert("Error occurred. Look at console for details");
     }
 }
-
-// Called when onOrderCreated is fired
-async function handleOnOrderCreated(orderStatus) {
-    console.log('handleOnOrderCreated');
-    console.info(checkout);
-
-    const response = await sendPostRequest("api/initiatePayment", giftCardComponent.state);
-
-    switch (response.resultCode) {
-        case "Authorised":
-        case "Pending":
-        case "Received":
-            let subtractedGiftcardBalance = remainingAmountToPay - orderStatus.remainingAmount.value;
-            remainingAmountToPay = orderStatus.remainingAmount.value;
-
-            const remainingAmountElement = document.getElementById('remaining-due-amount');
-            remainingAmountElement.textContent = (remainingAmountToPay / 100).toFixed(2);
-
-            // Show the subtracted balance of the gift card to the shopper if there are any changes
-
-            if (remainingAmountToPay > 0) {
-                // Clears any (previous) error messages
-                clearGiftCardErrorMessages();
-
-                // Show 'Gift card applied' message
-                showGiftcardAppliedMessage(subtractedGiftcardBalance);
-
-                // Show payment method buttons
-                showAllPaymentMethodButtons();
-
-                // Hide gift card component
-                giftCardComponent.unmount();
-                document.getElementById("add-giftcard-button").hidden = true;
-                document.getElementById("giftcard-container").hidden = true;
-            }
-            else
-            {
-                window.location.href = "/result/error";
-            }
-            break;
-        case "Refused":
-            window.location.href = "/result/failed";
-            break;
-        default:
-            // Show an error message
-            showGiftCardErrorMessage('Invalid gift card');
-            break;
-    }
-}
-
 
 // Calls your server endpoints
 async function sendPostRequest(url, data) {

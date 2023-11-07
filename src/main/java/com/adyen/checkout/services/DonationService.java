@@ -19,10 +19,6 @@ public class DonationService {
 
     private static final String PAYMENT_ORIGINAL_PSPREFERENCE = "PaymentOriginalPspReference";
 
-    public DonationService() {
-
-    }
-
     public void setDonationTokenAndOriginalPspReference(String donationToken, String originalPspReference) {
         if (donationToken == null) {
             throw new NullPointerException("donationToken is null");

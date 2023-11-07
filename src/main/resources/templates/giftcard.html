@@ -29,10 +29,10 @@
                         </ul>
 
                         <a th:href="@{api/cart/giftcard/add(name='headphones')}">
-                            <p class="button">Add headphones</p>
+                            <p id="add-headphones-button" class="button">Add headphones</p>
                         </a>
                         <a th:href="@{api/cart/giftcard/add(name='sunglasses')}">
-                            <p class="button">Add sunglasses</p>
+                            <p id="add-sunglasses-button" class="button">Add sunglasses</p>
                         </a>
 
                         <p class="order-summary-list-list-item-no-border">
@@ -41,22 +41,22 @@
                     </div>
                     <div class="payment-method-selector">
                         <ul class="payment-method-list">
-                            <!-- Gift card button -->
-                            <li class="payment-method-list-item">
-                                <button type="button" id="add-giftcard-button" class="add-giftcard-button payment-method-selector-button">Redeem Gift Card</button>
-                                <p id="giftcard-container" class="payment" hidden></p>
+                            <!-- Gift card component -->
+                            <li class="giftcard-container payment-method-list-item">
+                                <button type="button" class="giftcard-button-selector payment-method-selector-button">Redeem Gift Card</button>
+                                <p id="giftcard-container-item" hidden></p>
                             </li>
 
                             <!-- Scheme component (cards) -->
                             <li class="scheme-container payment-method-list-item">
                                 <button type="button" class="scheme-button-selector payment-method-selector-button" hidden>Credit or debit card</button>
-                                <p class="scheme-container-item"></p>
+                                <p id="scheme-container-item" hidden></p>
                             </li>
 
                             <!-- iDeal component -->
                             <li class="ideal-container payment-method-list-item">
                                 <button type="button" class="ideal-button-selector payment-method-selector-button" hidden>iDEAL</button>
-                                <p class="ideal-container-item"></p>
+                                <p id="ideal-container-item" hidden></p>
                             </li>
                         </ul>
                     </div>
@@ -68,16 +68,10 @@
                             <li class="order-overview-list-item">
                                 <p class="order-overview-list-item-title-center">Overview</p>
                             </li>
-                            <li class="order-overview-item">
-                                <p class="order-overview-list-item-total-amount">Total amount</p>
-                                <p class="order-overview-list-item-total-amount-price" th:text="${(totalAmount / 100d)}"></p>
-                            </li>
                             <li class="order-overview-list-item">
                                 <p class="order-overview-list-item-remaining">Remaining amount to be paid:</p>
                                 <p class="order-overview-list-item-remaining-price" id="remaining-due-amount" th:text="${(totalAmount / 100d)}"></p>
                             </li>
-                            <!-- See adyenGiftcardImplementation.js > function: `showGiftcardAppliedMessage(..)` -->
-                            <!-- We insert <div class='order-overview-list-item-giftcard-balance'></div> elements here to show 'Gift card applied' message(s)  -->
                         </ul>
 
                         <ul id="order-overview-list-error" class="order-overview-list">

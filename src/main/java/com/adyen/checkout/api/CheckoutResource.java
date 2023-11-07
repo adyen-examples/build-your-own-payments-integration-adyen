@@ -96,7 +96,7 @@ public class CheckoutResource {
 
         var response = ordersApi.orders(createOrderRequest);
 
-        orderDataService.setOrderData(response.getOrderData(), response.getPspReference());
+        orderDataService.setOrderData(response.getOrderData(), response.getPspReference(), response.getRemainingAmount().getValue());
 
         return ResponseEntity.ok()
                 .body(response);
@@ -113,6 +113,9 @@ public class CheckoutResource {
         cancelOrderRequest.setOrder(order);
 
         var response = ordersApi.cancelOrder(cancelOrderRequest);
+
+        orderDataService.clearOrderData();
+
         return ResponseEntity.ok()
                 .body(response);
     }
@@ -148,9 +151,48 @@ public class CheckoutResource {
         var paymentRequest = new PaymentRequest();
 
         var orderRef = UUID.randomUUID().toString();
+
         var amount = new Amount()
                 .currency("EUR")
                 .value(cartService.getTotalAmount());
+
+        if (body.getOrder() != null && body.getPaymentMethod().getCardDetails() != null && body.getPaymentMethod().getCardDetails().getType() != null && body.getPaymentMethod().getCardDetails().getType().getValue() == "giftcard"){
+            // Do a balance-check to see if gift card has enough funds.
+            var balanceCheckRequest = new BalanceCheckRequest();
+            balanceCheckRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
+
+            var balanceCheckAmount = new Amount()
+                    .currency("EUR")
+                    .value(cartService.getTotalAmount());
+            balanceCheckRequest.setAmount(balanceCheckAmount);
+
+            balanceCheckRequest.setPaymentMethod(new HashMap<>() {
+                { put("brand", body.getPaymentMethod().getCardDetails().getBrand()); }
+                { put("encryptedCardNumber", body.getPaymentMethod().getCardDetails().getEncryptedCardNumber()); }
+                { put("encryptedSecurityCode", body.getPaymentMethod().getCardDetails().getEncryptedSecurityCode()); }
+                { put("type", body.getPaymentMethod().getCardDetails().getType().getValue()); }
+            });
+
+            // Send balance-check request
+            var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
+
+            // Handle response
+            switch (response.getResultCode()) {
+                case SUCCESS:
+                    amount = new Amount()
+                            .currency("EUR")
+                            .value(cartService.getTotalAmount()); // Pay the remaining amount
+                    break;
+                case NOTENOUGHBALANCE:
+                    amount = new Amount()
+                            .currency("EUR")
+                            .value(response.getBalance().getValue()); // Pay the full amount for gift cards
+                    break;
+                case FAILED:
+                default:
+                    return ResponseEntity.badRequest().build();
+            }
+        }
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
@@ -160,6 +202,8 @@ public class CheckoutResource {
         paymentRequest.setAmount(amount);
 
         var items = cartService.getShoppingCart().getCartItems();
+
+        paymentRequest.setCountryCode("NL");
 
         var lineItems = new ArrayList<LineItem>();
         for (CartItemModel item : items) {
@@ -183,17 +227,33 @@ public class CheckoutResource {
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
         // Used for partial orders
-        if (orderDataService.getOrderData() != null && orderDataService.getOrderData() != null) {
+        if (orderDataService.hasOrderData()) {
             var order = new EncryptedOrderData();
             order.setOrderData(orderDataService.getOrderData());
             order.setPspReference(orderDataService.getOrderPspReference());
+
             paymentRequest.setOrder(order);
-            paymentRequest.setOrderReference(orderDataService.getOrderPspReference());
+            if (orderDataService.getFirstPaymentPspReference() != null) {
+                paymentRequest.setOrderReference(orderDataService.getFirstPaymentPspReference());
+            }
         }
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
+        if (response.getResultCode() == PaymentResponse.ResultCodeEnum.AUTHORISED) {
+
+            if (orderDataService.getFirstPaymentPspReference() != null) {
+                orderDataService.setFirstPaymentPspReference(response.getOrder().getPspReference());
+            }
+
+            if (orderDataService.hasOrderData()) {
+                var remainingAmount = orderDataService.getRemainingAmount() - amount.getValue();
+                orderDataService.setRemainingAmount(remainingAmount); // Set new remaining amount
+            }
+        }
+
+        // donations
         if (response.getDonationToken() == null) {
             log.warn("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
         } else {

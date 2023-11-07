@@ -32,7 +32,7 @@ async function handleDonation(amount) {
 }
 
 async function startGiving() {
-  const checkout= await AdyenCheckout({
+  const checkout = await AdyenCheckout({
     clientKey,
     environment: "test",
   });

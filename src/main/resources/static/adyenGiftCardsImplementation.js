@@ -70,7 +70,7 @@ async function createAdyenCheckout(paymentMethodsResponse) {
         showPayButton: true,
         paymentMethodsConfiguration: {
             ideal: {
-                showImage: true,
+                showImage: true
             },
             card: {
                 hasHolderName: true,
@@ -104,8 +104,10 @@ async function createAdyenCheckout(paymentMethodsResponse) {
 
                 const subtractedGiftCardBalance = remainingAmountToPay - response.order.remainingAmount?.value;
 
+                // Show remaining amount on the drop-in
                 remainingAmountToPay = response.order.remainingAmount?.value;
 
+                // Show remaining amount
                 const remainingAmountElement = document.getElementById('remaining-due-amount');
                 remainingAmountElement.textContent = (remainingAmountToPay / 100).toFixed(2);
 

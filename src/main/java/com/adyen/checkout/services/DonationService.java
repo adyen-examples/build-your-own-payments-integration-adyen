@@ -21,7 +21,7 @@ public class DonationService {
 
     public void setDonationTokenAndOriginalPspReference(String donationToken, String originalPspReference) {
         if (donationToken == null) {
-            throw new NullPointerException("donationToken is null");
+            return;
         }
 
         session.setAttribute(PAYMENT_ORIGINAL_PSPREFERENCE, originalPspReference);
@@ -31,16 +31,15 @@ public class DonationService {
     public String getDonationToken() {
         var donationToken = session.getAttribute(DONATION_TOKEN);
         if (donationToken == null) {
-            throw new NotFoundException("Could not find donationToken in the sessions");
+            return null;
         }
         return (String) donationToken;
     }
 
     public String getPaymentOriginalPspReference() {
-
         var pspReference = session.getAttribute(PAYMENT_ORIGINAL_PSPREFERENCE);
         if (pspReference == null) {
-            throw new NotFoundException("Could not find originalPspReference in the sessions");
+            return null;
         }
         return (String) pspReference;
     }

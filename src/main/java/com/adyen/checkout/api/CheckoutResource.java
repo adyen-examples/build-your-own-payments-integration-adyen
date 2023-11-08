@@ -42,10 +42,9 @@ public class CheckoutResource {
     private DonationService donationService;
 
     @Autowired
-    private OrderService orderDataService;
+    private OrderService orderService;
 
     public CheckoutResource(ApplicationProperty applicationProperty) {
-
         this.applicationProperty = applicationProperty;
 
         if(applicationProperty.getApiKey() == null) {
@@ -90,51 +89,22 @@ public class CheckoutResource {
 
         var merchantReference = UUID.randomUUID().toString();
 
-        var amount = new Amount()
-                .currency("EUR")
-                .value(cartService.getTotalAmount());
+        // default: shopper needs to pay the full amount
+        long remainingAmountToPay = cartService.getTotalAmount();
 
-        // do a balance-check when a gift card is used as payment method to see if it has enough funds
-        if (body.getOrder() != null &&
-            body.getPaymentMethod().getCardDetails() != null &&
-            body.getPaymentMethod().getCardDetails().getType() != null &&
-            body.getPaymentMethod().getCardDetails().getType().getValue() == "giftcard"){
-
-            var balanceCheckRequest = new BalanceCheckRequest();
-            balanceCheckRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
-
-            var balanceCheckAmount = new Amount()
-                    .currency("EUR")
-                    .value(cartService.getTotalAmount());
-            balanceCheckRequest.setAmount(balanceCheckAmount);
-
-            balanceCheckRequest.setPaymentMethod(new HashMap<>() {
-                { put("brand", body.getPaymentMethod().getCardDetails().getBrand()); }
-                { put("encryptedCardNumber", body.getPaymentMethod().getCardDetails().getEncryptedCardNumber()); }
-                { put("encryptedSecurityCode", body.getPaymentMethod().getCardDetails().getEncryptedSecurityCode()); }
-                { put("type", body.getPaymentMethod().getCardDetails().getType().getValue()); }
-            });
-
-            // sends balance-check request
-            var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
-
-            // handles response
-            switch (response.getResultCode()) {
-                case SUCCESS:
-                    amount = new Amount()
-                            .currency("EUR")
-                            .value(orderDataService.getRemainingAmount()); // pay the remaining amount
-                    break;
-                case NOTENOUGHBALANCE:
-                    amount = new Amount()
-                            .currency("EUR")
-                            .value(response.getBalance().getValue()); // pay the remaining (or full) amount on your gift card
-                    break;
-                case FAILED:
-                default:
-                    return ResponseEntity.badRequest().build();
+        // if it's an (partial) order, get the remaining amount to pay
+        if (body.getOrder() != null) {
+            var amountFromGiftCard = orderService.getAmountFromGiftCard(body.getPaymentMethod());
+            if (amountFromGiftCard != null) {
+                remainingAmountToPay = amountFromGiftCard.getValue();
+            } else {
+                remainingAmountToPay = orderService.getRemainingAmount();
             }
         }
+
+        var amount = new Amount()
+                .currency("EUR")
+                .value(remainingAmountToPay);
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
@@ -145,8 +115,8 @@ public class CheckoutResource {
 
         var items = cartService.getShoppingCart().getCartItems();
 
+        // used for klarna
         paymentRequest.setCountryCode("NL");
-
         var lineItems = new ArrayList<LineItem>();
         for (CartItemModel item : items) {
             lineItems.add(new LineItem()
@@ -168,31 +138,31 @@ public class CheckoutResource {
         paymentRequest.setShopperIP(request.getRemoteAddr());
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
-        // sets the OrderData, PspReference and FirstPspReference of the gift card payment for partial orders
+        // sets order (orderData, pspReference and orderReference)
         if (body.getOrder() != null) {
             var order = new EncryptedOrderData()
                     .orderData(body.getOrder().getOrderData())
                     .pspReference(body.getOrder().getPspReference());
             paymentRequest.setOrder(order);
-
             paymentRequest.setOrderReference(body.getOrderReference());
         }
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
-        // sets new remaining amount
-        if (response.getOrder() != null && response.getResultCode() == PaymentResponse.ResultCodeEnum.AUTHORISED) {
-            orderDataService.setRemainingAmount(response.getOrder().getRemainingAmount().getValue());
+        // sets new remaining amount in a session-cookie
+        if (response.getOrder() != null) {
+            switch (response.getResultCode()){
+                case AUTHORISED:
+                case PENDING:
+                case RECEIVED:
+                    orderService.setRemainingAmount(response.getOrder().getRemainingAmount().getValue());
+                    donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
+                    break;
+                default:
+                    break;
+            }
         }
-
-        // sets the donation token
-        if (response.getDonationToken() == null) {
-            log.warn("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
-        } else {
-            donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
-        }
-
         return ResponseEntity.ok()
                 .body(response);
     }

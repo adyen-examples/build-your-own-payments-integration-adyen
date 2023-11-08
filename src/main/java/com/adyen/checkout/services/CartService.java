@@ -13,9 +13,6 @@ public class CartService {
     @Autowired
     protected HttpSession session;
 
-    @Autowired
-    private OrderService orderDataService;
-
     private final static String SHOPPING_CART = "ShoppingCart";
 
     private HashMap<String, InventoryModel> inventory;

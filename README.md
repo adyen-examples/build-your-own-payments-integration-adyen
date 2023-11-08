@@ -124,7 +124,7 @@ This means we'll have to change a couple of things on our front- and backend.
      * The `initiatePayment` method should have a variable amount that can be changed according to the shopper's cart.
      * The `getPaymentMethods` and `submitAdditionalDetails` should be implemented in `CheckoutResource.java`.
      * Tip: use a session cookie to temporarily store the items or an in-memory cache.
-  * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`
+  * **Note**: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`.
 
 
 ## Module 2 : Upgrading to the latest version of the library and Adyen Drop-in
@@ -164,6 +164,7 @@ Time to prepare your backend to perform donations.
 
 4. Perform a successful donation to finish this module and make sure to receive the webhook.
 
+
 **Tip:** You need to enable donations in the Customer Area & an ADP in the Backoffice.
 
 
@@ -192,9 +193,11 @@ They will have to order it through the website themselves.
 3. Prepare the frontend to handle gift cards.
    * When using drop-in, partial payments are handled within the drop-in component.
    * When using components, you'll have to handle the remaining amount yourself by overriding the respective event handlers `onBalanceCheck`, `onOrderRequest` and `onOrderCancel`.
-   These can be found in `adyenGiftCardsImplementation.js`.
+   These can be found in `adyenGiftCardsImplementation.js` -> `giftCardConfiguration`.
 
 4. Perform a successful gift card (partial) payment, finish this module by completing a gift card **and** a debit card payment/iDEAL to pay the remaining amount.
+
+**Food for thought:** Donations will not work when the last payment was finalized with a gift card. Can you find a way to handle this?
 
 **Tip:** Don't forget to enable the gift card payment methods in the Customer Area.
 

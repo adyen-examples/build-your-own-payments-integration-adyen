@@ -5,6 +5,7 @@ import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.services.CartService;
 import com.adyen.checkout.services.DonationService;
+import com.adyen.checkout.services.OrderService;
 import com.adyen.enums.Environment;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.PaymentsApi;
@@ -41,6 +42,9 @@ public class CheckoutResource {
     private DonationService donationService;
 
     @Autowired
+    private OrderService orderService;
+
+    @Autowired
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
         this.applicationProperty = applicationProperty;
@@ -73,7 +77,8 @@ public class CheckoutResource {
         var orderRef = UUID.randomUUID().toString();
         var amount = new Amount()
             .currency("EUR")
-            .value(cartService.getTotalAmount());
+            .value(cartService.getTotalAmount()); // TODO : the amount is no longer the total amount; add logic to handle remaining amount for partial payments when a paymentMethod.type == giftcard
+
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
@@ -83,6 +88,8 @@ public class CheckoutResource {
         paymentRequest.setAmount(amount);
 
         var items = cartService.getShoppingCart().getCartItems();
+
+        paymentRequest.setCountryCode("NL");
 
         var lineItems = new ArrayList<LineItem>();
         for (CartItemModel item : items) {
@@ -99,8 +106,12 @@ public class CheckoutResource {
         paymentRequest.setShopperIP(request.getRemoteAddr());
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
+        // TODO : When it's an order, we have to set the orderData, pspReference and the orderReference in the `paymentRequest`
+
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
+
+        // TODO : When a successful response, we have to set the remaining amount correctly in the orderService.
 
         if (response.getDonationToken() == null) {
             log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");

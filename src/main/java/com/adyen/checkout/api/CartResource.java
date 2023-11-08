@@ -27,6 +27,12 @@ public class CartResource {
         return new RedirectView("/preview?type=" + type);
     }
 
+    @GetMapping("/giftcard/add")
+    public RedirectView add(@RequestParam(required = true) String name)  {
+        cartService.addItemToCart(name);
+        return new RedirectView("/giftcard?type=giftcard");
+    }
+
     public CartService getCartService() {
         return cartService;
     }

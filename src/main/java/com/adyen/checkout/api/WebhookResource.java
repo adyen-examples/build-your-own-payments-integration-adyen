@@ -53,6 +53,9 @@ public class WebhookResource {
                             Alias : {}
                             PSP reference : {}"""
                         , item.getEventCode(), item.getMerchantReference(), item.getAdditionalData().get("alias"), item.getPspReference());
+
+                    // TODO: Add & handle ORDERED_OPENED, ORDER_CLOSED webhooks (& AUTHORISED), print the psp-reference of every partial payment
+
                 } else {
                     log.warn("Could not validate HMAC signature for incoming webhook message: {}", item);
                     throw new RuntimeException("Invalid HMAC signature");

@@ -3,6 +3,7 @@ package com.adyen.checkout.web;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.services.CartService;
+import com.adyen.checkout.services.OrderService;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -27,6 +28,9 @@ public class CheckoutController {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private OrderService orderService;
 
     @Autowired
     public CheckoutController(ApplicationProperty applicationProperty) {
@@ -55,6 +59,19 @@ public class CheckoutController {
         return "preview";
     }
 
+    @GetMapping("/giftcard")
+    public String giftcard(@RequestParam String type, Model model) {
+        model.addAttribute("type", type);
+        model.addAttribute("clientKey", this.applicationProperty.getClientKey());
+
+        // Create an empty shopping cart stored in your http cookie session.
+        cartService.createEmptyShoppingCart();
+        model.addAttribute("cart", cartService.getShoppingCart());
+        model.addAttribute("totalAmount", cartService.getTotalAmount());
+
+        return "giftcard";
+    }
+
     @GetMapping("/checkout")
     public String checkout(@RequestParam String type, Model model) {
         model.addAttribute("type", type);
@@ -68,6 +85,7 @@ public class CheckoutController {
         model.addAttribute("type", type);
         if (type.equals("success")) {
             getCartService().clearShoppingCart();
+            getOrderService().clearOrderRemainingAmount();
         }
         return "result";
     }
@@ -82,7 +100,7 @@ public class CheckoutController {
         return cartService;
     }
 
-    public void setCartService(CartService cartService) {
-        this.cartService = cartService;
+    public OrderService getOrderService() {
+        return orderService;
     }
 }

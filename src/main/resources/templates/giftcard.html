@@ -1,0 +1,92 @@
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Checkout</title>
+</head>
+<body>
+<div layout:fragment="content" id="payment-page">
+    <!-- Hidden divs with data passed from the Express server -->
+    <div id="clientKey" class="hidden" th:text="${clientKey}"></div>
+    <div id="type" class="hidden" th:text="${type}"></div>
+    <div id="totalAmount" class="hidden" th:text="${totalAmount}"></div>
+
+    <main class="preview-page">
+        <section class="cart">
+            <h2>Gift cards checkout</h2>
+            <p>Gift card test number: 7777182708544835</p>
+
+            <div class="preview-container">
+                <div class="preview-container-left">
+                    <div class="order-summary">
+                        <ul class="order-summary-list">
+                            <li class="order-summary-list-list-item" th:each="item: ${cart.cartItems}">
+                                <img th:src="'/images/' + ${item.name} + '.png'" class="order-summary-list-list-item-image" alt="">
+                                <p class="order-summary-list-list-item-title" th:text="${item.name}"></p>
+                                <p class="order-summary-list-list-item-price" th:text="${(item.amount / 100d)} + ' ' + ${item.currency}"></p>
+                            </li>
+                        </ul>
+
+                        <a th:href="@{api/cart/giftcard/add(name='headphones')}">
+                            <p id="add-headphones-button" class="button">Add headphones</p>
+                        </a>
+                        <a th:href="@{api/cart/giftcard/add(name='sunglasses')}">
+                            <p id="add-sunglasses-button" class="button">Add sunglasses</p>
+                        </a>
+
+                        <p class="order-summary-list-list-item-no-border">
+                        <p class="order-summary-list-list-item-subtitle">Select 'Redeem Gift Card' and complete your payment with another payment method:</p>
+                        </p>
+                    </div>
+                    <div class="payment-method-selector">
+                        <ul class="payment-method-list">
+                            <!-- Gift card component -->
+                            <li class="giftcard-container payment-method-list-item">
+                                <button type="button" class="giftcard-button-selector payment-method-selector-button">Redeem Gift Card</button>
+                                <p id="giftcard-container-item" hidden></p>
+                            </li>
+
+                            <!-- Scheme component (cards) -->
+                            <li class="scheme-container payment-method-list-item">
+                                <button type="button" class="scheme-button-selector payment-method-selector-button" hidden>Credit or debit card</button>
+                                <p id="scheme-container-item" hidden></p>
+                            </li>
+
+                            <!-- iDeal component -->
+                            <li class="ideal-container payment-method-list-item">
+                                <button type="button" class="ideal-button-selector payment-method-selector-button" hidden>iDEAL</button>
+                                <p id="ideal-container-item" hidden></p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="preview-container-right">
+                    <div class="order-overview">
+                        <ul id="order-overview-list" class="order-overview-list">
+                            <li class="order-overview-list-item">
+                                <p class="order-overview-list-item-title-center">Overview</p>
+                            </li>
+                            <li class="order-overview-list-item">
+                                <p class="order-overview-list-item-remaining">Remaining amount to be paid:</p>
+                                <p class="order-overview-list-item-remaining-price" id="remaining-due-amount" th:text="${(totalAmount / 100d)}"></p>
+                            </li>
+                        </ul>
+
+                        <ul id="order-overview-list-error" class="order-overview-list">
+                            <li class="order-overview-list-item">
+                                <p id="giftcard-error-message" class="order-overview-list-item-giftcard-error-message"></p>
+                            </li>
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Adyen Component client code -->
+    <script type="text/javascript" src="/adyenGiftCardsImplementation.js"></script>
+</div>
+</body>

@@ -75,10 +75,24 @@ public class CheckoutResource {
         var paymentRequest = new PaymentRequest();
 
         var orderRef = UUID.randomUUID().toString();
+
+
+        // default: shopper needs to pay the full amount
+        long remainingAmountToPay = cartService.getTotalAmount();
+
+        // if it's an (partial) order, get the remaining amount to pay
+        if (body.getOrder() != null) {
+            var amountFromGiftCard = orderService.getAmountFromGiftCard(body.getPaymentMethod());
+            if (amountFromGiftCard != null) {
+                remainingAmountToPay = amountFromGiftCard.getValue();
+            } else {
+                remainingAmountToPay = orderService.getRemainingAmount();
+            }
+        }
+
         var amount = new Amount()
             .currency("EUR")
-            .value(cartService.getTotalAmount()); // TODO : the amount is no longer the total amount; add logic to handle remaining amount for partial payments when a paymentMethod.type == giftcard
-
+            .value(remainingAmountToPay); // pass remainingAmountToPay
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
@@ -106,12 +120,30 @@ public class CheckoutResource {
         paymentRequest.setShopperIP(request.getRemoteAddr());
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
-        // TODO : When it's an order, we have to set the orderData, pspReference and the orderReference in the `paymentRequest`
+        // sets order (orderData, pspReference and orderReference)
+        if (body.getOrder() != null) {
+            var order = new EncryptedOrderData()
+                    .orderData(body.getOrder().getOrderData())
+                    .pspReference(body.getOrder().getPspReference());
+            paymentRequest.setOrder(order);
+            paymentRequest.setOrderReference(body.getOrderReference());
+        }
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
 
-        // TODO : When a successful response, we have to set the remaining amount correctly in the orderService.
+        // When a successful response, we set the remaining amount correctly in the orderService.
+        if (response.getOrder() != null) {
+            switch (response.getResultCode()){
+                case AUTHORISED:
+                case PENDING:
+                case RECEIVED:
+                    orderService.setRemainingAmount(response.getOrder().getRemainingAmount().getValue());
+                    break;
+                default:
+                    break;
+            }
+        }
 
         if (response.getDonationToken() == null) {
             log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");

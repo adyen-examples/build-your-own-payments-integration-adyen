@@ -24,4 +24,4 @@ This means we'll have to change a couple of things on our front- and backend.
     * The `initiatePayment` method should have a variable amount that can be changed according to the shopper's cart.
     * The `getPaymentMethods` and `submitAdditionalDetails` should be implemented in `CheckoutResource.java`.
     * Tip: use a session cookie to temporarily store the items or an in-memory cache.
-* _Note: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`_
+* _Note: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`.

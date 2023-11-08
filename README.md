@@ -171,10 +171,18 @@ Time to prepare your backend to perform donations.
 
 **Briefing**
 
-We've noticed that some of our customers would love to give their friends some nice headphones as a gift.
+We've noticed that some of our customers would love to give their friends some nice headphones or sunglasses as a gift.
 They will have to order it through the website themselves.
 
 1. Prepare your backend to handle gift cards, see [documentation](https://docs.adyen.com/payment-methods/gift-cards/web-component).
+   * You'll need to implement the three methods  in the `OrderResource.java` controller
+     * `/balanceCheck` method calls the `/paymentMethods/balance`-endpoint
+     * `/cancelOrder` method calls the `/cancelOrder`-endpoint
+     * `/createOrder` method calls the `/order/`-endpoint
+   * In the `/initiatePayment`, we'll have to handle partial orders
+     * In the case of a partial order, we need to keep track of a `remainingAmount` that the shopper needs to pay (use the `OrderService.java` service to save this in a session)
+       * **Tip:** if the incoming payment method is a gift card, we'll need to a balanceCheck again to verify whether the gift card has sufficient funds.
+       You can implement a helper function that takes in a paymentMethod in `OrderService.java` (e.g. `getAmountFromGiftCard(paymentMethod)`) and returns the amount
 
 2. Prepare your backend to handle the respective gift card webhooks.
    * Validate the HMAC signature of the incoming webhooks.
@@ -184,11 +192,11 @@ They will have to order it through the website themselves.
 3. Prepare the frontend to handle gift cards.
    * When using drop-in, partial payments are handled within the drop-in component.
    * When using components, you'll have to handle the remaining amount yourself by overriding the respective event handlers `onBalanceCheck`, `onOrderRequest` and `onOrderCancel`.
-     * For this workshop, mounting a scheme and iDeal component should be sufficient.
+   These can be found in `adyenGiftCardsImplementation.js`.
 
-4. Perform a successful gift card (partial) payment, finish this module by completing a gift card **and** a debit card payment to pay the remaining amount.
+4. Perform a successful gift card (partial) payment, finish this module by completing a gift card **and** a debit card payment/iDEAL to pay the remaining amount.
 
-**Tip:** Don't forget to enable the payment method in the Customer Area.
+**Tip:** Don't forget to enable the gift card payment methods in the Customer Area.
 
 
 ## Contacting us

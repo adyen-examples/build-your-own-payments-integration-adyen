@@ -70,16 +70,16 @@ public class OrderService {
             // sends balance-check request
             var response = ordersApi.getBalanceOfGiftCard(balanceCheckRequest);
 
-            // handles response, determine how the shopper needs to pay
+            // handles response, determine how much the shopper still needs to pay
             switch (response.getResultCode()) {
                 case SUCCESS:
                     return new Amount()
                             .currency("EUR")
-                            .value(getRemainingAmount()); // pay the remaining amount
+                            .value(getRemainingAmount()); // return the remaining amount
                 case NOTENOUGHBALANCE:
                     return new Amount()
                             .currency("EUR")
-                            .value(response.getBalance().getValue()); // pay the remaining (or full) amount on your gift card
+                            .value(response.getBalance().getValue()); // return the amount on your gift card
                 case FAILED:
                 default:
                     return null;

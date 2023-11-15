@@ -5,9 +5,8 @@ import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.services.CartService;
 import com.adyen.enums.Environment;
-import com.adyen.model.Amount;
 import com.adyen.model.checkout.*;
-import com.adyen.service.Checkout;
+import com.adyen.service.checkout.PaymentsApi;
 import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -33,6 +32,8 @@ public class CheckoutResource {
 
     private final ApplicationProperty applicationProperty;
 
+    private final PaymentsApi paymentsApi;
+
     @Autowired
     private CartService cartService;
 
@@ -47,7 +48,7 @@ public class CheckoutResource {
         }
 
         var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
-        this.checkout = new Checkout(client);
+        this.paymentsApi = new PaymentsApi(client);
     }
 
     @PostMapping("/getPaymentMethods")
@@ -57,14 +58,14 @@ public class CheckoutResource {
         paymentMethodsRequest.setChannel(PaymentMethodsRequest.ChannelEnum.WEB);
 
         log.info("REST request to get Adyen payment methods {}", paymentMethodsRequest);
-        var response = checkout.paymentMethods(paymentMethodsRequest);
+        var response = paymentsApi.paymentMethods(paymentMethodsRequest);
         return ResponseEntity.ok()
             .body(response);
     }
 
     @PostMapping("/initiatePayment")
-    public ResponseEntity<PaymentsResponse> payments(@RequestHeader String host, @RequestBody PaymentsRequest body, HttpServletRequest request) throws IOException, ApiException {
-        var paymentRequest = new PaymentsRequest();
+    public ResponseEntity<PaymentResponse> payments(@RequestHeader String host, @RequestBody PaymentRequest body, HttpServletRequest request) throws IOException, ApiException {
+        var paymentRequest = new PaymentRequest();
 
         var orderRef = UUID.randomUUID().toString();
         var amount = new Amount()
@@ -72,7 +73,7 @@ public class CheckoutResource {
             .value(cartService.getTotalAmount());
 
         paymentRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
-        paymentRequest.setChannel(PaymentsRequest.ChannelEnum.WEB);
+        paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
         paymentRequest.setReference(orderRef);
         paymentRequest.setReturnUrl(request.getScheme() + "://" + host + "/api/handleShopperRedirect?orderRef=" + orderRef);
 
@@ -96,14 +97,14 @@ public class CheckoutResource {
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
-        var response = checkout.payments(paymentRequest);
+        var response = paymentsApi.payments(paymentRequest);
         return ResponseEntity.ok().body(response);
     }
 
     @PostMapping("/submitAdditionalDetails")
-    public ResponseEntity<PaymentsDetailsResponse> payments(@RequestBody PaymentsDetailsRequest detailsRequest) throws IOException, ApiException {
+    public ResponseEntity<PaymentDetailsResponse> payments(@RequestBody PaymentDetailsRequest detailsRequest) throws IOException, ApiException {
         log.info("REST request to make Adyen payment details {}", detailsRequest);
-        var response = checkout.paymentsDetails(detailsRequest);
+        var response = paymentsApi.paymentsDetails(detailsRequest);
         return ResponseEntity.ok()
             .body(response);
     }
@@ -117,20 +118,18 @@ public class CheckoutResource {
      */
     @GetMapping("/handleShopperRedirect")
     public RedirectView redirect(@RequestParam(required = false) String payload, @RequestParam(required = false) String redirectResult) throws IOException, ApiException {
-        var detailsRequest = new PaymentsDetailsRequest();
+        var detailsRequest = new PaymentDetailsRequest();
 
+        PaymentCompletionDetails details = new PaymentCompletionDetails();
         if (redirectResult != null && !redirectResult.isEmpty()) {
-            detailsRequest.setDetails(new HashMap<String, String>() {
-                { put("redirectResult",  redirectResult); }
-            });
+            details.redirectResult(redirectResult);
         } else if (payload != null && !payload.isEmpty()) {
-            detailsRequest.setDetails(new HashMap<String, String>() {
-                { put("payload",  payload); }
-            });
+            details.payload(payload);
         }
+        detailsRequest.setDetails(details);
 
         log.info("REST request to handle payment redirect {}", detailsRequest);
-        var response = checkout.paymentsDetails(detailsRequest);
+        var response = paymentsApi.paymentsDetails(detailsRequest);
         var redirectURL = "/result/";
         switch (response.getResultCode()) {
             case AUTHORISED:

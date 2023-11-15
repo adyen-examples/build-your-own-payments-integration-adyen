@@ -5,7 +5,7 @@
     * `git checkout module-2-start` to get the starting template.
 * A proposed solution is available with the `module-2-end` tag.
     * `git checkout module-2-end` to get the proposed solution.
-    * 
+
 ## Briefing
 
 Project MyStore has been very successful! Your shop is running at full speed and you're selling more and more headphones and sunglasses every day.

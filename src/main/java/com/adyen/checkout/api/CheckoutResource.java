@@ -33,8 +33,6 @@ public class CheckoutResource {
 
     private final ApplicationProperty applicationProperty;
 
-    private final Checkout checkout;
-
     @Autowired
     private CartService cartService;
 

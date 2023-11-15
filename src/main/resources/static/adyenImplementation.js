@@ -4,11 +4,38 @@ const type = document.getElementById("type").innerHTML;
 
 async function initCheckout() {
   try {
-
-    //TODO : Call you server to get the paymentMethodsResponse
-
-    //TODO : create a valid configuration object to pass to the AdyenCheckout. Use handleSubmission to imeplment the event handlers
-
+    const paymentMethodsResponse = await sendPostRequest("/api/getPaymentMethods");
+    const configuration = {
+      paymentMethodsResponse: paymentMethodsResponse,
+      clientKey,
+      locale: "en_US",
+      environment: "test",
+      showPayButton: true,
+      paymentMethodsConfiguration: {
+        ideal: {
+          showImage: true,
+        },
+        card: {
+          hasHolderName: true,
+          holderNameRequired: true,
+          name: "Credit or debit card",
+          amount: {
+            value: totalAmount,
+            currency: "EUR",
+          },
+        }
+      },
+      onSubmit: (state, component) => {
+        if (state.isValid) {
+          handleSubmission(state, component, "/api/initiatePayment");
+        }
+      },
+      onAdditionalDetails: (state, component) => {
+        handleSubmission(state, component, "/api/submitAdditionalDetails");
+      },
+    };
+    // `spring.jackson.default-property-inclusion=non_null` needs to set in
+    // src/main/resources/application.properties to avoid NPE here
     const checkout = await new AdyenCheckout(configuration);
     checkout.create(type).mount(document.getElementById("payment"));
   } catch (error) {

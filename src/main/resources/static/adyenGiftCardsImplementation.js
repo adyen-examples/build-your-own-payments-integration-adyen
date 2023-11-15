@@ -26,22 +26,32 @@ const giftCardConfiguration =  {
         console.info(data);
         console.log('onBalanceCheck');
 
-        // TODO : implement call to do a balanceCheck
+        const balanceCheckResponse = await sendPostRequest("/api/balanceCheck", data);
+        console.info(balanceCheckResponse);
+
+        resolve(balanceCheckResponse);
     },
     onOrderRequest: async function (resolve, reject, data) {
         console.info(data);
         console.log('onOrderRequest');
 
-        // TODO : implement call to create an order
+        const createOrderResponse = await sendPostRequest("/api/createOrder");
+        console.info(createOrderResponse);
+
+        resolve(createOrderResponse);
     },
     onOrderCancel: async function (order) {
         console.info(order);
         console.log('onOrderCancel');
 
-        // TODO: implement call to cancel an order
+        const orderCancelResponse = await sendPostRequest("/api/cancelOrder", order);
+        console.info(orderCancelResponse);
 
-        // TODO: update your checkout instance
-        //checkout.update(...);
+        checkout.update({
+            paymentMethodsResponse: await sendPostRequest("/api/getPaymentMethods"),
+            order: null,
+            amount: { currency: "EUR", value: 0 }
+        });
     }
 };
 
@@ -80,9 +90,9 @@ async function createAdyenCheckout(paymentMethodsResponse) {
                 throw new Error("State is not valid");
             }
 
-            // TODO: call /api/initiatePayment with state.data
+            var response = await sendPostRequest("/api/initiatePayment", state.data);
+            console.info(response);
 
-            // TODO: handle actions based on the response:
             if (response.action) {
                 component.handleAction(response.action);
             } else if (response.order && response.order?.remainingAmount?.value > 0) { // Handles partial orders for you and updates the UI
@@ -112,7 +122,11 @@ async function createAdyenCheckout(paymentMethodsResponse) {
                 document.getElementById("scheme-container-item").hidden = true;
 
                 // TODO: update checkout
-                //checkout.update(...);
+                checkout.update({
+                    paymentMethodsResponse: paymentMethodsResponse,
+                    order,
+                    amount: response.order.remainingAmount
+                });
             } else {
                 switch (response.resultCode) {
                     case "Authorised":

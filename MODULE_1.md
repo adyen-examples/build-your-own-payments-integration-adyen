@@ -15,13 +15,15 @@ The other option is to rework our implementation and use advanced checkout now. 
 
 ## Your job :
 
-In this module, we will transform our sessions implementation into an advanced checkout page using the advanced flow. Here are some helpful tips:
-The `/sessions` calls the following three Adyen endpoints: [1] `/paymentmethods` (retrieves available payment methods), [2] `/payments` (starts a transaction) and [3] `/payments/details` (submits payment details).
-This means we'll have to change a couple of things on our front- and backend.
-* Frontend: We need to override several event handlers and handle the subsequent calls.
-    * Show the amount that the shopper needs to pay on the drop-in.
-* Backend `/api/CheckoutResource.java`: We have to implement these three calls that the frontend needs to call. We'll also need include additional parameters.
-    * The `initiatePayment` method should have a variable amount that can be changed according to the shopper's cart.
-    * The `getPaymentMethods` and `submitAdditionalDetails` should be implemented in `CheckoutResource.java`.
-    * Tip: use a session cookie to temporarily store the items or an in-memory cache.
-* _Note: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`.
+In this module, we will transform our sessions implementation into an advanced checkout page using the advanced flow. 
+
+1. In order to have a dynamic cart functionality available, we have added a `CartResource`. 
+    * This additional API is triggered inside the `preview.html` template and keeps track of the current cart.
+    * The cart is stored in a session cookie.
+    * (ignore the actual implementation of the functionality, the point here is to have to use dynamic checkout)
+2. Convert the previous `/sessions` implementation to use the advanced flow instead.
+    * In `/api/CheckoutResource.java`, implement the `initiatePayment`, `getPaymentMethods` and `submitAdditionalDetails` methods.
+    * Don't forget to use the `CartResource` to retrieve the content of the cart as well as the final amount.
+    * _Note: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`_
+    * Complete `adyenImplementation.js`, using the previous implementation as a reference.
+3. This module is successful when the website works just as before. Test the different payments methods to make sure everything is working as expected.

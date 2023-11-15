@@ -4,10 +4,12 @@
 
 This repository is a step-by-step guide to building your own payment integration with Adyen. We will start from a simple drop-in integration, and build our way up to a fully customized checkout page.
 
-Each module starts at the relevant tag number. For example, to start module 2, checkout tag `module-2-start`.
-In case you want to skip a module or compare your solution, you can checkout the corresponding tag. For example, `module-2-end` for module 2.
+The main objective is to put yourself in the shoes of a developer having to integrate with Adyen and maintain an application over time. On top of this README, please use all of the publicly available information (docs, blogs, ....) but we ask you to avoid using insider's tooling. 
 
-_Note that the workshop is intended to highlight some of the pains of our customers when building and upgrading. We know there might be better ways to do things, with a deeper knowledge of the platform._
+Each module starts at the corresponding branch name. For example, to start module 2, checkout branch `module-2-start`.
+In case you want to skip a module or compare your solution, you can checkout the corresponding branch. For example, `module-2-end` for module 2.
+
+_Note that the workshop is intended to highlight some of the pains of our customers when building and upgrading. We know there might be better ways to do things, with a deeper knowledge of the platform or that things have improved this year. Keep an open mind and think about the future._
 
 ### Context of the code repository.
 
@@ -32,12 +34,19 @@ Some information on how the project is constructed :
   * In order to play around with multiple payment methods, a `type` value is passed from the client to the server, which contains the name of an adyen payment method and that the adyen web components will recognize. You will not need to interact with this but we are mentioning it to avoid any confusion :).
 * To run the project 
   * `./gradlew bootRun` will start the server on port 8080.
-  * `./gradlew build` will build the project.
+  * `./gradlew build` will build the project (you can use this to test the code compiles).
   * You can also run the project from your IDE, like IntelliJ or Eclipse. The main class is then `src/main/java/com/adyen/checkout/OnlinePaymentsApplication.java`.
 
 ### Prerequisites
 
-- Set the following environment variables on your system: `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_API_KEY`, `ADYEN_HMAC_KEY`, `ADYEN_CLIENT_KEY`.
+
+_Note : For this workshop we're asking you to start from a clean merchant account. The facilitators will provide you with one at the start of the workshop._
+
+You will need a few things to get started:
+
+* an IDE (like IntelliJ or VsCode)
+* A Java SDK. You can use any but the project was tested with Java 17.
+* The following environment variables on your system: `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_API_KEY`, `ADYEN_CLIENT_KEY`, `ADYEN_HMAC_KEY` (will be used later).
 
 on MacOS, it looks like this:
 ```bash
@@ -46,6 +55,9 @@ export ADYEN_CLIENT_KEY="CLIENT_KEY"
 export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
 export ADYEN_HMAC_KEY="HMACKEY"
 ```
+
+_Note: don't forget that you need to restart your IDE after setting the environment variables so they are picked up._
+
 ## Starting the workshop
 
 Pick your module to start working :

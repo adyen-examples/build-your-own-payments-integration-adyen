@@ -16,15 +16,21 @@ Let's implement this!
 
 ## Your job :
 
-0. Enable donations in the Customer Area (& an ADP in the Backoffice).
-1. Prepare your backend to handle an Adyen giving flow: https://docs.adyen.com/online-payments/donations/web-component/
-    * You'll notice that you have to change your existing backend and frontend flows.
+_Note: For this module, the facilitator will need an ADP in the backoffice. If you have enabled donations in the Customer Area but you don't get any donationToken back in your payment response, check with them._
+
+0. [Enable donations](https://docs.adyen.com/online-payments/donations/testing/#enable-giving-ca) in the Customer Area.
+1. Prepare your backend to handle an [Adyen giving flow](https://docs.adyen.com/online-payments/donations/web-component/)
+    * In `CheckoutResource.java`, make sure to set the donationToken as part of the payment request in the `payments` method.
+    * Don't forget to use the donationService to store the donation token for future use.
+    * In `DonationResource.java`, implement the `donations` method that will handle the incoming donation request.
 2. Prepare your backend to handle the incoming donation webhook.
     * In `Webhookresource.java`, build the logic to handle the `NotificationRequest` incoming, and print some useful information on the screen.
     * Validate the HMAC signature of the webhook.
     * _Tip: Notice that the webhook is different and that you'll have to create a different endpoint to receive this webhook._
 3. Update your frontend so that it contains a donation screen that calls your backend when a donation-amount is specified.
-    * Using Adyen Components, add and mount the `<div>` accordingly. The button should call your respective endpoint that you've implemented in step 1.
-    * _Tip: You can save the donationToken/pspReference in your cookie session._
-4. Perform a successful donation to finish this module and make sure to receive the webhook event.
+    * In `result.html` , we had a new state, "donated", which will appear after someone has paid, and donated!
+    * In `result.html`, add the donation container, which should only show when a payment has been procesed (hint: , you can use the following thymeleaf logic : `th:if="${type == 'success' || type == 'pending' }`).
+    * In the same file, don't forget to import the necessary javascript file to handle the donation logic.
+4. In `adyenGivingImplementation.js`, implement the donations logic and the proper configuration objects.
+4. Perform a successful donation to finish this module and make sure to receive the webhook event. Note that not all payment methodscan be used for donations. 
 

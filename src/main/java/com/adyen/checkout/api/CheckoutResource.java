@@ -4,6 +4,7 @@ import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.services.CartService;
+import com.adyen.checkout.services.DonationService;
 import com.adyen.enums.Environment;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.PaymentsApi;
@@ -35,6 +36,9 @@ public class CheckoutResource {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private DonationService donationService;
 
     @Autowired
     public CheckoutResource(ApplicationProperty applicationProperty) {
@@ -97,6 +101,14 @@ public class CheckoutResource {
 
         log.info("REST request to make Adyen payment {}", paymentRequest);
         var response = paymentsApi.payments(paymentRequest);
+
+        if (response.getDonationToken() == null) {
+            log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");
+        }
+        else {
+            donationService.setDonationTokenAndOriginalPspReference(response.getDonationToken(), response.getPspReference());
+        }
+
         return ResponseEntity.ok().body(response);
     }
 

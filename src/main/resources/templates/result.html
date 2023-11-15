@@ -24,9 +24,10 @@
     </p>
     <a class="button" href="/">Return Home</a>
 
-    <!-- TODO : Add a donation container here that will appear in case someone has successfully processed a payment -->
-
-    <!-- TODO : Add the necessary javascript import to know how to process donations.-->
+    <div th:if="${type == 'success' || type == 'pending' }" id='donation-container'>
+      <div id="donation" class="donation"></div>
+    </div>
+    <script type="text/javascript" src="/adyenGivingImplementation.js"></script>
 
   </div>
 </div>

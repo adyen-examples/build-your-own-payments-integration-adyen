@@ -67,12 +67,27 @@ public class WebhookResource {
     }
 
     @PostMapping("/webhooks/giving")
-    public ResponseEntity<String> givingWebhooks(@RequestBody String json) {
+    public ResponseEntity<String> givingWebhooks(@RequestBody String json) throws IOException {
+        var notificationRequest = NotificationRequest.fromJson(json);
+        var notificationRequestItem = notificationRequest.getNotificationItems().stream().findFirst();
 
-        // TODO : Implement the method to process the donations webhook and print useful information in the logs
+        if (notificationRequestItem.isPresent()) {
+            var item = notificationRequestItem.get();
 
-        // TODO: Acknowledge event has been consumed
-        return ResponseEntity.ok().body("");
+            log.info("""
+                            Received webhook with event {} :\s
+                            Merchant Account Code: {}
+                            PSP reference : {}
+                            Donation successful : {}
+                            """
+                , item.getEventCode(), item.getMerchantAccountCode(), item.getPspReference(), item.isSuccess());
+
+            // consume event asynchronously / perform logic here by sending it to a queue / save it in a database
+
+        } else {
+            log.warn("Empty NotificationItem");
+        }
+        return ResponseEntity.ok().body("[accepted]");
     }
 
     @Bean

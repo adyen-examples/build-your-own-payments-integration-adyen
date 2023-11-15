@@ -1,6 +1,5 @@
 const clientKey = document.getElementById("clientKey").innerHTML;
 
-// Used to finalize a checkout call in case of redirect
 const urlParams = new URLSearchParams(window.location.search);
 const sessionId = urlParams.get('sessionId'); // Unique identifier for the payment session
 const redirectResult = urlParams.get('redirectResult');
@@ -11,9 +10,10 @@ async function startCheckout() {
   const type = document.getElementById("type").innerHTML;
 
   try {
-    //TODO : call the server "/api/sessions?type=" + type", and feed the response of the server to the createAdyenCheckout function. You can use the sendPostRequest function help for that.
+    const checkoutSessionResponse = await sendPostRequest("/api/sessions?type=" + type);
     const checkout = await createAdyenCheckout(checkoutSessionResponse);
     checkout.create(type).mount(document.getElementById("payment"));
+
   } catch (error) {
     console.error(error);
     alert("Error occurred. Look at console for details");
@@ -34,7 +34,25 @@ async function finalizeCheckout() {
 async function createAdyenCheckout(session){
   return new AdyenCheckout(
     {
-      // TODO: insert the adyen checkout configuration here. The input session parameter can be fed into the session parameter of the configuration.
+      clientKey,
+      locale: "en_US",
+      environment: "test",
+      session: session,
+      showPayButton: true,
+      paymentMethodsConfiguration: {
+        ideal: {
+          showImage: true,
+        },
+        card: {
+          hasHolderName: true,
+          holderNameRequired: true,
+          name: "Credit or debit card",
+          amount: {
+            value: 10000,  // in minor units
+            currency: "EUR",
+          },
+        }
+      },
       onPaymentCompleted: (result, component) => {
         console.info("onPaymentCompleted");
         console.info(result, component);
@@ -63,21 +81,21 @@ async function sendPostRequest(url, data) {
 }
 
 function handleServerResponse(res, _component) {
-    switch (res.resultCode) {
-      case "Authorised":
-        window.location.href = "/result/success";
-        break;
-      case "Pending":
-      case "Received":
-        window.location.href = "/result/pending";
-        break;
-      case "Refused":
-        window.location.href = "/result/failed";
-        break;
-      default:
-        window.location.href = "/result/error";
-        break;
-    }
+  switch (res.resultCode) {
+    case "Authorised":
+      window.location.href = "/result/success";
+      break;
+    case "Pending":
+    case "Received":
+      window.location.href = "/result/pending";
+      break;
+    case "Refused":
+      window.location.href = "/result/failed";
+      break;
+    default:
+      window.location.href = "/result/error";
+      break;
+  }
 }
 
 if (!sessionId) { startCheckout() } else { finalizeCheckout(); }

@@ -4,6 +4,7 @@ import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.enums.Environment;
 import com.adyen.model.Amount;
+import com.adyen.model.RequestOptions;
 import com.adyen.model.checkout.CreateCheckoutSessionRequest;
 import com.adyen.model.checkout.CreateCheckoutSessionResponse;
 import com.adyen.model.checkout.LineItem;
@@ -27,6 +28,8 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class CheckoutResource {
     private final Logger log = LoggerFactory.getLogger(CheckoutResource.class);
+
+    private final Checkout checkout;
 
     private final ApplicationProperty applicationProperty;
 

@@ -6,6 +6,7 @@ import com.adyen.checkout.models.CartItemModel;
 import com.adyen.checkout.services.CartService;
 import com.adyen.checkout.services.DonationService;
 import com.adyen.enums.Environment;
+import com.adyen.model.RequestOptions;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.PaymentsApi;
 import com.adyen.service.exception.ApiException;
@@ -99,8 +100,11 @@ public class CheckoutResource {
         paymentRequest.setShopperIP(request.getRemoteAddr());
         paymentRequest.setPaymentMethod(body.getPaymentMethod());
 
+        var requestOptions = new RequestOptions();
+        requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
+
         log.info("REST request to make Adyen payment {}", paymentRequest);
-        var response = paymentsApi.payments(paymentRequest);
+        var response = paymentsApi.payments(paymentRequest, requestOptions);
 
         if (response.getDonationToken() == null) {
             log.error("The payments endpoint did not return a donationToken, please enable this in your Customer Area. See README.");

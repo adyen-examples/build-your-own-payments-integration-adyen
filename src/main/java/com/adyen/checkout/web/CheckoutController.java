@@ -21,6 +21,7 @@ public class CheckoutController {
 
         if(this.applicationProperty.getClientKey() == null) {
             log.warn("ADYEN_CLIENT_KEY is undefined ");
+            //throw new RuntimeException("ADYEN_CLIENT_KEY is UNDEFINED");
         }
     }
 

@@ -1,7 +1,6 @@
 package com.adyen.checkout.api;
 
 import com.adyen.checkout.ApplicationProperty;
-import com.adyen.service.Checkout;
 import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -22,8 +21,6 @@ public class CheckoutResource {
 
     private final ApplicationProperty applicationProperty;
 
-    private final Checkout checkout;
-
     @Autowired
     public CheckoutResource(ApplicationProperty applicationProperty) {
 
@@ -34,12 +31,17 @@ public class CheckoutResource {
             throw new RuntimeException("ADYEN_API_KEY is UNDEFINED");
         }
 
+        if(applicationProperty.getMerchantAccount() == null) {
+            log.warn("ADYEN_MERCHANT_ACCOUNT is UNDEFINED");
+            throw new RuntimeException("ADYEN_MERCHANT_ACCOUNT is UNDEFINED");
+        }
+
         // TODO: Instantiate a new Checkout Client here
     }
 
     @PostMapping("/sessions")
     // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity<> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
+    public ResponseEntity sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
 
         // TODO : Create a valid sessions request here based on the input of that function
         var response = "";

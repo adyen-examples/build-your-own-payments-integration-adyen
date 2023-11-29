@@ -1,10 +1,36 @@
 # Build your own Payment Integration with Adyen
 
+### Prerequisites
+
+_Note : For this workshop we're asking you to start from a clean merchant account. The facilitators will provide you with one at the start of the workshop._
+
+You will need a few things to get started:
+
+* an IDE (like IntelliJ or VsCode)
+* A Java SDK. You can use any but the project was tested with Java 17.
+* The following [environment variables](https://docs.adyen.com/development-resources/api-credentials/) on your system: `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_API_KEY`, `ADYEN_CLIENT_KEY`, `ADYEN_HMAC_KEY` (will be used later).
+
+on MacOS, it looks like this:
+```bash
+export ADYEN_API_KEY="API_KEY"
+export ADYEN_CLIENT_KEY="CLIENT_KEY"
+export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
+export ADYEN_HMAC_KEY="HMACKEY"
+```
+
+_Note: don't forget that you need to restart your IDE after setting the environment variables so they are picked up._
+
+
 ## Introduction
 
 This repository is a step-by-step guide to building your own payment integration with Adyen. We will start from a simple drop-in integration, and build our way up to a fully customized checkout page.
 
-The main objective is to put yourself in the shoes of a developer having to integrate with Adyen and maintain an application over time. On top of this README, please use all of the publicly available information (docs, blogs, ....) but we ask you to avoid using insider's tooling. 
+
+The main objective is to put yourself in the shoes of a developer having to integrate with Adyen and maintain an application over time.
+Not all steps are written at a granular-level, but would require you to visit the different resources.
+We encourage you to use all of the publicly available information (adyen.docs, blogs, github...), but, if you're an Adyen employee, we ask you to avoid using insider's tooling / resources.
+If you encounter any difficulties, feel free to bring them up during the workshop after each module.
+
 
 Each module starts at the corresponding branch name. For example, to start module 2, checkout branch `module-2-start`.
 In case you want to skip a module or compare your solution, you can checkout the corresponding branch. For example, `module-2-end` for module 2.
@@ -37,30 +63,11 @@ Some information on how the project is constructed :
   * `./gradlew build` will build the project (you can use this to test the code compiles).
   * You can also run the project from your IDE, like IntelliJ or Eclipse. The main class is then `src/main/java/com/adyen/checkout/OnlinePaymentsApplication.java`.
 
-### Prerequisites
-
-
-_Note : For this workshop we're asking you to start from a clean merchant account. The facilitators will provide you with one at the start of the workshop._
-
-You will need a few things to get started:
-
-* an IDE (like IntelliJ or VsCode)
-* A Java SDK. You can use any but the project was tested with Java 17.
-* The following environment variables on your system: `ADYEN_MERCHANT_ACCOUNT`, `ADYEN_API_KEY`, `ADYEN_CLIENT_KEY`, `ADYEN_HMAC_KEY` (will be used later).
-
-on MacOS, it looks like this:
-```bash
-export ADYEN_API_KEY="API_KEY"
-export ADYEN_CLIENT_KEY="CLIENT_KEY"
-export ADYEN_MERCHANT_ACCOUNT="MERCHANT_ACCOUNT"
-export ADYEN_HMAC_KEY="HMACKEY"
-```
-
-_Note: don't forget that you need to restart your IDE after setting the environment variables so they are picked up._
-
 ## Starting the workshop
 
-Pick your module to start working :
+Pick `Module 0` to start the workshop :
+
+After cloning the `main`-repository, you should be able to run your application. The Adyen Drop-in/Components won't load initially and will be your starting point of the workshop.
 
 * [Module 0 : Building a simple checkout page using sessions](MODULE_0.md)
 * [Module 1 : Building an advanced checkout page using the advanced flow](MODULE_1.md)

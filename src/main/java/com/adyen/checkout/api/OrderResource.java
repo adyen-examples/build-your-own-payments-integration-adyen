@@ -6,6 +6,7 @@ import com.adyen.checkout.models.requests.PaymentMethodBalanceCheckRequest;
 import com.adyen.checkout.services.CartService;
 import com.adyen.checkout.services.OrderService;
 import com.adyen.enums.Environment;
+import com.adyen.model.RequestOptions;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.OrdersApi;
 import com.adyen.service.exception.ApiException;
@@ -84,7 +85,10 @@ public class OrderResource {
                 .value(cartService.getTotalAmount());
         createOrderRequest.setAmount(amount);
 
-        var response = ordersApi.orders(createOrderRequest);
+        var requestOptions = new RequestOptions();
+        requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
+
+        var response = ordersApi.orders(createOrderRequest, requestOptions);
 
         orderService.setRemainingAmount(response.getRemainingAmount().getValue());
 
@@ -99,7 +103,10 @@ public class OrderResource {
 
         cancelOrderRequest.setOrder(encryptedOrderData);
 
-        var response = ordersApi.cancelOrder(cancelOrderRequest);
+        var requestOptions = new RequestOptions();
+        requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
+
+        var response = ordersApi.cancelOrder(cancelOrderRequest, requestOptions);
 
         orderService.clearOrderRemainingAmount();
 

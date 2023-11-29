@@ -4,6 +4,7 @@ import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
 import com.adyen.checkout.services.DonationService;
 import com.adyen.enums.Environment;
+import com.adyen.model.RequestOptions;
 import com.adyen.model.checkout.*;
 import com.adyen.service.checkout.PaymentsApi;
 import com.adyen.service.exception.ApiException;
@@ -72,7 +73,10 @@ public class DonationResource {
         donationRequest.setMerchantAccount(this.applicationProperty.getMerchantAccount());
         donationRequest.shopperInteraction(DonationPaymentRequest.ShopperInteractionEnum.CONTAUTH);
 
-        DonationPaymentResponse result = this.paymentsApi.donations(donationRequest);
+        var requestOptions = new RequestOptions();
+        requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
+
+        DonationPaymentResponse result = this.paymentsApi.donations(donationRequest, requestOptions);
 
         return ResponseEntity.ok()
             .body(result);

@@ -39,17 +39,17 @@ _Note that the workshop is intended to highlight some of the pains of our custom
 
 ### Context of the code repository.
 
-In this workshop, we are using Java and Spring Boot, together with a static frontend based on thymelead template.
+In this workshop, we are using Java and Spring Boot, together with a static frontend based on `thymeleaf` template.
 We use those because we want to reduce the amount of prerequisite knowledge (like a frontend framework) and use a strongly typed language for the backend to build empathy for the customer experience.
 
 _In case the static frontend environment is not to your liking, feel free to implement your own frontend solution using the framework of your choice. However, note that it will take precious time away from the actual exercises._
 
 In this workshop we are not asking you to build a complete integration, but rather to fill in the voids based on resources you can find in our docs and other online resources.
 
-Some information on how the project is constructed :
+**Some information on how the project is constructed**
 * The java code is to be found in `src/main/java/com/adyen/checkout`
   * The code you need to update is in the `api` folder. `CheckoutResource.java` for API related code and `WebhookResource.java` for webhooks.
-  * You can access environment variables via the `applicationProperty` object.
+  * You can access environment variables (e.g. Api Key, Merchant Account, HMAC Key, Client Key) via the `applicationProperty` object.
 * The frontend templates are to be found in `src/main/resources/templates` and the static resources in `src/main/resources/static`
   * The `templates` contains the html files that are rendered by the server.
   * The `layout.html` file is the template file that contains the adyen `js` and `css` imports.
@@ -61,7 +61,7 @@ Some information on how the project is constructed :
 * To run the project 
   * `./gradlew bootRun` will start the server on port 8080.
   * `./gradlew build` will build the project (you can use this to test the code compiles).
-  * You can also run the project from your IDE, like IntelliJ or Eclipse. The main class is then `src/main/java/com/adyen/checkout/OnlinePaymentsApplication.java`.
+  * You can also run the project from your IDE (e.g. IntelliJ). The main class is then `src/main/java/com/adyen/checkout/OnlinePaymentsApplication.java`. Right-click and hit debug/run.
 
 ## Starting the workshop
 
@@ -72,7 +72,7 @@ After cloning the `main`-repository, you should be able to run your application.
 * [Module 0 : Building a simple checkout page using sessions](MODULE_0.md)
 * [Module 1 : Building an advanced checkout page using the advanced flow](MODULE_1.md)
 * [Module 2 : Upgrading to the latest version of the library and Adyen Drop-in](MODULE_2.md)
-* [Module 3 : Adding donations!](MODULE_3.md)
+* [Module 3 : Adding donations](MODULE_3.md)
 * [Module 4 : Adding gift cards](MODULE_4.md)
 
 ## Contacting us

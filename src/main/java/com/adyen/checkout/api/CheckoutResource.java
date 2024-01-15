@@ -1,6 +1,14 @@
 package com.adyen.checkout.api;
 
+import com.adyen.Client;
 import com.adyen.checkout.ApplicationProperty;
+import com.adyen.enums.Environment;
+import com.adyen.model.Amount;
+import com.adyen.model.RequestOptions;
+import com.adyen.model.checkout.CreateCheckoutSessionRequest;
+import com.adyen.model.checkout.CreateCheckoutSessionResponse;
+import com.adyen.model.checkout.LineItem;
+import com.adyen.service.Checkout;
 import com.adyen.service.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -10,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * REST controller for using Adyen checkout API
@@ -18,6 +28,8 @@ import java.io.IOException;
 @RequestMapping("/api")
 public class CheckoutResource {
     private final Logger log = LoggerFactory.getLogger(CheckoutResource.class);
+
+    private final Checkout checkout;
 
     private final ApplicationProperty applicationProperty;
 
@@ -36,15 +48,32 @@ public class CheckoutResource {
             throw new RuntimeException("ADYEN_MERCHANT_ACCOUNT is UNDEFINED");
         }
 
-        // TODO: Instantiate a new Checkout Client here
+        var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
+        this.checkout = new Checkout(client);
     }
 
     @PostMapping("/sessions")
-    // TODO : Add the correct return type here for the ResponseEntity
-    public ResponseEntity sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
+    public ResponseEntity<CreateCheckoutSessionResponse> sessions(@RequestHeader String host, @RequestParam String type, HttpServletRequest request) throws IOException, ApiException {
+        var orderRef = UUID.randomUUID().toString();
+        var amount = new Amount()
+            .currency("EUR")
+            .value(10000L);
 
-        // TODO : Create a valid sessions request here based on the input of that function
-        var response = "";
+        var checkoutSession = new CreateCheckoutSessionRequest();
+        checkoutSession.countryCode("NL");
+        checkoutSession.merchantAccount(this.applicationProperty.getMerchantAccount());
+        checkoutSession.setChannel(CreateCheckoutSessionRequest.ChannelEnum.WEB);
+        checkoutSession.setReference(orderRef); // required
+        checkoutSession.setReturnUrl(request.getScheme() + "://" + host + "/redirect?orderRef=" + orderRef);
+        checkoutSession.setAmount(amount);
+
+        checkoutSession.setLineItems(Arrays.asList(
+            new LineItem().quantity(1L).amountIncludingTax(5000L).description("Sunglasses"),
+            new LineItem().quantity(1L).amountIncludingTax(5000L).description("Headphones"))
+        );
+
+        log.info("REST request to create Adyen Payment Session {}", checkoutSession);
+        var response = checkout.sessions(checkoutSession);
         return ResponseEntity.ok().body(response);
     }
 }

@@ -43,6 +43,11 @@ public class CheckoutResource {
             throw new RuntimeException("ADYEN_API_KEY is UNDEFINED");
         }
 
+        if(applicationProperty.getMerchantAccount() == null) {
+            log.warn("ADYEN_MERCHANT_ACCOUNT is UNDEFINED");
+            throw new RuntimeException("ADYEN_MERCHANT_ACCOUNT is UNDEFINED");
+        }
+
         var client = new Client(applicationProperty.getApiKey(), Environment.TEST);
         this.checkout = new Checkout(client);
     }

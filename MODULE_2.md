@@ -21,4 +21,5 @@ This should only take us a few minutes!
 2. Upgrade your Java library to the latest version: See [Java releases](https://github.com/Adyen/adyen-java-api-library/releases)
     * In `build.gradle`, update `adyen-java-api-library` to the latest version.
     * Fix all the compilation errors in `CheckoutResource.java` and `WebhookResource.java`.
+    * _Note:_ After bumping up the version and building the project, we've seen some cases of where your IntelliJ is unable to pick-up the new model changes. You may need to clear your cache and restart your IDE to fix this.
 3. This module is successful when the website works just as before. Test the different payments methods to make sure everything is working as expected.

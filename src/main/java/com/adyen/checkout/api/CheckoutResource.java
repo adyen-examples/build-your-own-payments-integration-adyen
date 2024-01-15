@@ -28,6 +28,8 @@ public class CheckoutResource {
 
     private final ApplicationProperty applicationProperty;
 
+    private final Checkout checkout;
+
     @Autowired
     public CheckoutResource(ApplicationProperty applicationProperty) {
 

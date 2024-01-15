@@ -31,10 +31,10 @@ public class DonationResource {
 
     @PostMapping("/donations")
     // TODO : Find the proper response type for the method
-    public ResponseEntity<> donations(@RequestBody Amount body, @RequestHeader String host, HttpServletRequest request){
+    public ResponseEntity donations(@RequestBody Amount body, @RequestHeader String host, HttpServletRequest request){
 
         // TODO : Implement the method to perform a donations call
-
+        var result = "...";
         return ResponseEntity.ok()
             .body(result);
     }

@@ -20,10 +20,10 @@ In this module, we will transform our sessions implementation into an advanced c
 1. In order to have a dynamic cart functionality available, we have added a `CartResource`. 
     * This additional API is triggered inside the `preview.html` template and keeps track of the current cart.
     * The cart is stored in a session cookie.
-    * (ignore the actual implementation of the functionality, the point here is to have to use dynamic checkout)
+    * Ignore the actual implementation of the functionality, the point here is to have to use dynamic checkout. It's implemented so you can use functions like `getTotalAmount()` to retrieve the amount dynamically.
 2. Convert the previous `/sessions` implementation to use the advanced flow instead.
     * In `/api/CheckoutResource.java`, implement the `initiatePayment`, `getPaymentMethods` and `submitAdditionalDetails` methods.
     * Don't forget to use the `CartResource` to retrieve the content of the cart as well as the final amount.
-    * _Note: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect`_
+    * _Note: For redirects during a payment (returnUrl), we'll have to handle this accordingly in `/handleShopperRedirect?orderRef=..."`_
     * Complete `adyenImplementation.js`, using the previous implementation as a reference.
 3. This module is successful when the website works just as before. Test the different payments methods to make sure everything is working as expected.
